@@ -1,0 +1,13 @@
+dataset,model,cv_accuracy,cv_roc_auc
+symptom_triage,RandomForest,1.0,
+symptom_triage,XGBoost,0.8453,
+symptom_triage,LightGBM,0.7467,
+symptom_triage,CatBoost,0.9769,
+diabetes_risk,RandomForest,0.7656,0.8269
+diabetes_risk,XGBoost,0.7539,0.8168
+diabetes_risk,LightGBM,0.7447,0.7917
+diabetes_risk,CatBoost,0.7773,0.8332
+heart_risk,RandomForest,0.8152,0.9062
+heart_risk,XGBoost,0.7955,0.872
+heart_risk,LightGBM,0.7988,0.8734
+heart_risk,CatBoost,0.7987,0.8945

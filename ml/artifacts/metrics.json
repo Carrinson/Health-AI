@@ -1,0 +1,71 @@
+{
+  "symptom_triage": {
+    "note": "Deterministic dataset \u2014 100% accuracy reflects a lookup relationship, not learned predictive skill. Used for the symptom-checker demo flow only.",
+    "n_unique_rows": 304,
+    "n_classes": 41
+  },
+  "diabetes_risk": {
+    "test_accuracy": 0.7597,
+    "test_roc_auc": 0.8125,
+    "n_rows": 768,
+    "report": {
+      "0": {
+        "precision": 0.8,
+        "recall": 0.84,
+        "f1-score": 0.8195121951219512,
+        "support": 100.0
+      },
+      "1": {
+        "precision": 0.673469387755102,
+        "recall": 0.6111111111111112,
+        "f1-score": 0.6407766990291263,
+        "support": 54.0
+      },
+      "accuracy": 0.7597402597402597,
+      "macro avg": {
+        "precision": 0.736734693877551,
+        "recall": 0.7255555555555555,
+        "f1-score": 0.7301444470755387,
+        "support": 154.0
+      },
+      "weighted avg": {
+        "precision": 0.7556321229790618,
+        "recall": 0.7597402597402597,
+        "f1-score": 0.7568387094790126,
+        "support": 154.0
+      }
+    }
+  },
+  "heart_risk": {
+    "test_accuracy": 0.8197,
+    "test_roc_auc": 0.901,
+    "n_rows": 303,
+    "report": {
+      "0": {
+        "precision": 0.9473684210526315,
+        "recall": 0.6428571428571429,
+        "f1-score": 0.7659574468085106,
+        "support": 28.0
+      },
+      "1": {
+        "precision": 0.7619047619047619,
+        "recall": 0.9696969696969697,
+        "f1-score": 0.8533333333333334,
+        "support": 33.0
+      },
+      "accuracy": 0.819672131147541,
+      "macro avg": {
+        "precision": 0.8546365914786966,
+        "recall": 0.8062770562770563,
+        "f1-score": 0.809645390070922,
+        "support": 61.0
+      },
+      "weighted avg": {
+        "precision": 0.847035621841489,
+        "recall": 0.819672131147541,
+        "f1-score": 0.8132263690268574,
+        "support": 61.0
+      }
+    }
+  }
+}
