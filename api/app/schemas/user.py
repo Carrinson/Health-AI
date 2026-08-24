@@ -25,6 +25,6 @@ class UserOut(BaseModel):
     is_active: bool
     created_at: datetime
 
-    class Token(BaseModel):
-        access_token = str
+class Token(BaseModel):
+        access_token: str
         token_type: str = "brearer"

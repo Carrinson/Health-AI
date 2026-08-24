@@ -3,6 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
 
+from app.routers import auth
+
+
 settings = get_settings()
 
 app = FastAPI(
@@ -10,6 +13,8 @@ app = FastAPI(
     description="Decision-support demo. Not medical advice Not for clinical use.",
     version="0.1.0",
 )
+
+app.include_router(auth.router)
 
 # The browser requests from a different origin unless the server opts in.
 # Your Next.js app runs on :3000, this api on :8000 - different origins.

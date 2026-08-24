@@ -1,6 +1,6 @@
 from datetime import UTC, datetime, timedelta
 from jose import JWTError, jwt
-from passlib.context import CryptContext
+import bcrypt
 
 from app.config import Settings, get_settings
 
@@ -9,10 +9,13 @@ settings = get_settings()
 # bcrypt is deliberately SLOW (~100ms per hash). That's the point: it makes
 # brute-forcing a stolen password database computationally expensive.
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def hash_password(plain: str) -> str:
-    return pwd_context.hash(plain)
+    # bcrypt operates on bytes and hard-caps input at 72 bytes — anything longer
+    # raises. Truncating is standard practice and costs nothing security-wise,
+    # since 72 bytes of password is already far beyond brute-force range.
+    pw = plain.encode("utf-8")[:72]
+    return bcrypt.hashpw(pw, bcrypt.gensalt()).decode("utf-8")
 
 def verify_password(plain: str, hashed: str) -> bool:
     """bcrypt stores the salt inside the hash, so this re-derives and compares
@@ -26,7 +29,8 @@ def verify_password(plain: str, hashed: str) -> bool:
       Makes Each Hash Unique: Two users with the same password get different final hashes.
       Forces Individual Attacks: Attackers must guess passwords one by one instead of looking them up fast."""
 
-    return pwd_context.verify(plain, hashed)
+    pw = plain.encode("utf-8")[:72]
+    return bcrypt.checkpw(pw, hashed.encode("utf-8"))
 
 def create_access_token(subject: str, role:str) -> str:
     """A JWT is three base64 parts: header, payload, signature.

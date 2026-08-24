@@ -18,7 +18,7 @@ engine = create_engine(
                     
 )
 
-SessionLocal = sessionmaker(bind=engine, autocommit=False, auto=False)
+SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
 
 class Base(DeclarativeBase):
     """Every table class inherits from this. SQLAlchemy uses it to discover
