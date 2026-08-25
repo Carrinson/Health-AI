@@ -1,0 +1,40 @@
+{
+  "expo": {
+    "name": "HealthAI Demo",
+    "slug": "healthai-demo",
+    "scheme": "healthaidemo",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.fola.healthdemo",
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "web": {
+        "bundler": "metro"
+      },
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-status-bar"
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "3b5d8bc9-ceaf-4e72-a005-fe57c35b0d01"
+      }
+    }
+  }
+}
