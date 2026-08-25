@@ -3,7 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
 
-from app.routers import auth
+from app.routers import auth, predictions
+
 
 
 settings = get_settings()
@@ -13,6 +14,9 @@ app = FastAPI(
     description="Decision-support demo. Not medical advice Not for clinical use.",
     version="0.1.0",
 )
+
+
+app.include_router(predictions.router)
 
 app.include_router(auth.router)
 
