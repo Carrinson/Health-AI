@@ -15,6 +15,9 @@ from app.config import get_settings
 from app.database import Base
 from app.models.user import User  # noqa: F401 — import so Alembic sees the table
 
+from app.models.record import MedicalRecord  # noqa: F401
+from app.models.appointment import Appointment  # noqa: F401
+
 config.set_main_option("sqlalchemy.url", get_settings().database_url)
 target_metadata = Base.metadata
 
