@@ -25,7 +25,7 @@ app.include_router(appointments.router)
 # Your Next.js app runs on :3000, this api on :8000 - different origins.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost: 3000"],
+    allow_origins=["http://localhost: 3000", "http://localhost:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
