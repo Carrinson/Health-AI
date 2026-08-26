@@ -2,13 +2,22 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import Login from "./pages/Login";
 
+import { Link } from "react-router-dom";
+
+import SymptomChecker from "./pages/SymptomChecker";
+
 function ProtectedRoute({ children }) {
   const { token } = useAuth();
   return token ? children : <Navigate to="/login" replace />;
 }
 
 function Dashboard() {
-  return <h1>Dashboard (placeholder)</h1>;
+  return (
+    <div style={{ padding: 40 }}>
+      <h1>Dashboard</h1>
+      <Link to="/symptom-checker">Go to Symptom Checker</Link>
+    </div>
+  );
 }
 
 export default function App() {
@@ -22,6 +31,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/symptom-checker"
+            element={
+              <ProtectedRoute>
+                <SymptomChecker />
               </ProtectedRoute>
             }
           />
