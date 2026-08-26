@@ -38,3 +38,4 @@ class RiskResponse(BaseModel):
     elevated_risk: bool
     threshold_used: float
     disclaimer: str = DISCLAIMER
+    top_factors: list[dict]

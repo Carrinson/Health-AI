@@ -15,4 +15,9 @@ def test_red_flag_overrides_high_confidence():
     assert determine_urgency(0.99, has_red_flags=True) == Urgency.EMERGENCY
 
 def test_low_confidence_defers_to_doctor():
-    assert determine_urgency(0.10, has_red_flags=False) == Urgency.ROUTINE
+    """Below 0.30, there isn't enough signal to say anything useful —
+    the honest answer is 'insufficient information', not a guess."""
+    assert determine_urgency(0.10, has_red_flags=False) == Urgency.INSUFFICIENT_INFO
+
+def test_moderate_confidence_routes_to_doctor():
+    assert determine_urgency(0.45, has_red_flags=False) == Urgency.ROUTINE

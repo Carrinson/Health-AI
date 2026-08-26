@@ -4,11 +4,16 @@ from pathlib import Path
 import joblib 
 import numpy as np
 
+import shap
+
 from app.config import get_settings
+
+
 
 settings = get_settings()
 
 MODEL_DIR = Path(settings.ml_model_dir)
+
 
 @lru_cache
 def load_model(name: str) -> dict:
@@ -43,26 +48,36 @@ def predict_triage(symptoms: dict[str, int], top_k: int = 3) -> list[dict]:
          for i in top_indices
     ]
 
+@lru_cache
+def load_explainer(model_name: str):
+    """Cached separately from the model — building a TreeExplainer has its
+    own setup cost, so we don't want to redo it per request either."""
+    bundle = load_model(model_name)
+    return shap.TreeExplainer(bundle["model"])
+
+
 def predict_risk(model_name: str, values: dict[str, float]) -> dict:
-    """Binary risk model — returns a probability, not a yes/no.
-
-    A screening tool should never assert 'you have diabetes'. It reports a
-    likelihood, and the decision about what to do sits with a clinician."""
-
     bundle = load_model(model_name)
     model, features = bundle["model"], bundle["features"]
 
-    vector = np.array([[values.get(f,0) for f in features]])
+    vector = np.array([[values.get(f, 0) for f in features]])
     probability = float(model.predict_proba(vector)[0][1])
+
+    explainer = load_explainer(model_name)
+    shap_values = explainer.shap_values(vector)
+    # Binary classifier: take the positive-class contributions.
+    contributions = shap_values[0, :, 1] if shap_values.ndim == 3 else shap_values[1][0]
+
+    top_idx = np.argsort(np.abs(contributions))[-3:][::-1]
+    top_factors = [
+        {"feature": features[i], "value": values.get(features[i], 0),
+         "contribution": round(float(contributions[i]), 4)}
+        for i in top_idx
+    ]
 
     return {
         "risk_probability": round(probability, 4),
-        # Threshold is 0,35, not the default 0.5. For screening, a missed case
-        # is worse than a false alarm — someone wrongly flagged gets a
-        # reassuring test, someone wrongly cleared goes home. Lowering the
-        # threshold trades precision for recall deliberately.
-
         "elevated_risk": probability >= 0.35,
         "threshold_used": 0.35,
-
-     }
+        "top_factors": top_factors,
+    }
