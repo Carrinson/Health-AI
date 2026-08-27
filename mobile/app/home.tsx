@@ -1,45 +1,67 @@
-import { View, Text, StyleSheet, ScrollView } from "react-native";
-
-const FEATURES = [
-  { name: "Symptom Checker", desc: "AI-assisted symptom triage" },
-  { name: "AI Chatbot", desc: "Ask general health questions" },
-  { name: "Medical Records", desc: "View your health history" },
-  { name: "Appointments", desc: "Book with a doctor" },
-];
+import { View, Text, Pressable, ScrollView, StyleSheet } from "react-native";
+import { useRouter } from "expo-router";
 
 export default function Home() {
+  const router = useRouter();
+  const firstName = "there"; // wire to real user data once auth is connected
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Welcome</Text>
-      <Text style={styles.disclaimer}>
-        For educational and demonstration purposes only. Not medical advice.
-        Not for clinical use.
-      </Text>
+      <View>
+        <Text style={styles.eyebrow}>Good morning</Text>
+        <Text style={styles.title}>{firstName}</Text>
+      </View>
 
-      {FEATURES.map((f) => (
-        <View key={f.name} style={styles.card}>
-          <Text style={styles.cardTitle}>{f.name}</Text>
-          <Text style={styles.cardDesc}>{f.desc}</Text>
-          <Text style={styles.badge}>Coming soon</Text>
+      <Pressable
+        onPress={() => router.push("/checker")}
+        style={({ pressed }) => [styles.heroCard, pressed && styles.heroCardPressed]}
+      >
+        <Text style={styles.heroEyebrow}>Start here</Text>
+        <Text style={styles.heroTitle}>Symptom checker</Text>
+        <Text style={styles.heroSubtitle}>
+          Answer a few questions to get an urgency level.
+        </Text>
+      </Pressable>
+
+      <View style={styles.shortcuts}>
+        <Text style={styles.sectionLabel}>Shortcuts</Text>
+        <View style={styles.grid}>
+          <Pressable style={styles.shortcutCard} onPress={() => router.push("/records")}>
+            <Text style={styles.shortcutText}>Medical records</Text>
+          </Pressable>
+          <Pressable style={styles.shortcutCard} onPress={() => router.push("/appointments")}>
+            <Text style={styles.shortcutText}>Book an appointment</Text>
+          </Pressable>
         </View>
-      ))}
+      </View>
+
+      <View style={styles.disclaimerBox}>
+        <Text style={styles.disclaimerText}>
+          HealthAI provides guidance only, not a diagnosis. Always consult a
+          qualified clinician.
+        </Text>
+      </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 24, gap: 16 },
-  title: { fontSize: 24, fontWeight: "700" },
-  disclaimer: { fontSize: 12, color: "#999", marginBottom: 8 },
-  card: {
-    borderWidth: 1, borderColor: "#eee", borderRadius: 10,
-    padding: 16, backgroundColor: "#fafafa",
+  container: { flexGrow: 1, padding: 24, gap: 24 },
+  eyebrow: { fontSize: 12, fontWeight: "500", letterSpacing: 1, textTransform: "uppercase", color: "#6B7280" },
+  title: { fontSize: 36, fontWeight: "700", letterSpacing: -0.5, marginTop: 4 },
+  heroCard: { backgroundColor: "#111111", borderRadius: 8, padding: 20, gap: 8 },
+  heroCardPressed: { backgroundColor: "#1F2937" },
+  heroEyebrow: { fontSize: 12, fontWeight: "500", letterSpacing: 1, textTransform: "uppercase", color: "#9CA3AF" },
+  heroTitle: { fontSize: 24, fontWeight: "700", color: "#FFFFFF", letterSpacing: -0.5 },
+  heroSubtitle: { fontSize: 14, color: "#D1D5DB", lineHeight: 20 },
+  shortcuts: { gap: 12 },
+  sectionLabel: { fontSize: 12, fontWeight: "500", letterSpacing: 1, textTransform: "uppercase", color: "#6B7280" },
+  grid: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
+  shortcutCard: {
+    flexBasis: "47%", borderWidth: 1, borderColor: "#E5E7EB", borderRadius: 8,
+    padding: 16, minHeight: 72, backgroundColor: "#FFFFFF",
   },
-  cardTitle: { fontSize: 16, fontWeight: "600" },
-  cardDesc: { fontSize: 14, color: "#666", marginTop: 4 },
-  badge: {
-    marginTop: 8, alignSelf: "flex-start", fontSize: 11,
-    color: "#888", backgroundColor: "#eee",
-    paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999,
-  },
+  shortcutText: { fontSize: 15, fontWeight: "600" },
+  disclaimerBox: { backgroundColor: "#F5F1E8", borderRadius: 6, padding: 16, marginTop: "auto" },
+  disclaimerText: { fontSize: 13, lineHeight: 20, color: "#6B7280" },
 });
