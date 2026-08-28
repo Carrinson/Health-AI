@@ -99,3 +99,51 @@ def get_queue(
     queue.sort(key=lambda x: priority.get(x["urgency"], 3))
 
     return queue
+
+@router.get("/patients")
+def list_patients(
+    user: Annotated[User, Depends(require_roles(UserRole.DOCTOR, UserRole.HOSPITAL_ADMIN, UserRole.PLATFORM_ADMIN))],
+    db: Annotated[Session, Depends(get_db)],
+):
+    """One row per patient, with their record count and most recent
+    symptom-check urgency if they have one. Kept simple — a real system
+    would paginate; fine for a demo dataset."""
+    import json
+
+    from app.models.record import MedicalRecord, RecordType
+
+    patients = db.query(User).filter(User.role == UserRole.PATIENT).all()
+
+    result = []
+    for p in patients:
+        record_count = (
+            db.query(func.count(MedicalRecord.id))
+            .filter(MedicalRecord.patient_id == p.id)
+            .scalar()
+        )
+        latest_check = (
+            db.query(MedicalRecord)
+            .filter(
+                MedicalRecord.patient_id == p.id,
+                MedicalRecord.record_type == RecordType.SYMPTOM_CHECK,
+            )
+            .order_by(MedicalRecord.created_at.desc())
+            .first()
+        )
+        last_urgency = None
+        last_date = None
+        if latest_check:
+            content = json.loads(latest_check.content)
+            last_urgency = content.get("urgency")
+            last_date = latest_check.created_at.isoformat()
+
+        result.append({
+            "id": p.id,
+            "fullname": p.fullname,
+            "email": p.email,
+            "record_count": record_count,
+            "last_urgency": last_urgency,
+            "last_check_date": last_date,
+        })
+
+    return result

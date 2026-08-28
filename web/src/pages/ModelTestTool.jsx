@@ -11,7 +11,7 @@ const COMMON_SYMPTOMS = [
   "joint_pain", "nausea", "dizziness", "stomach_pain",
 ];
 
-export default function SymptomChecker() {
+export default function ModelTestTool() {
   const [selected, setSelected] = useState({});
   const [result, setResult] = useState(null);
   const [error, setError] = useState("");
@@ -50,7 +50,11 @@ export default function SymptomChecker() {
 
   return (
     <div style={{ maxWidth: 600, margin: "40px auto", padding: "0 16px" }}>
-      <h1>Symptom Checker</h1>
+      <h1>Model Test Tool</h1>
+      <p style={{ color: "#6B7280", marginBottom: 24 }}>
+        Staff reference tool for inspecting model behavior. Not a patient flow —
+        the patient-facing symptom checker lives in the mobile app.
+      </p>
 
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 20 }}>
         {COMMON_SYMPTOMS.map((s) => (

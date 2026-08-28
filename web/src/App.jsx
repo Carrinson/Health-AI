@@ -4,9 +4,10 @@ import Login from "./pages/Login";
 
 import { Link } from "react-router-dom";
 
-import SymptomChecker from "./pages/SymptomChecker";
+import ModelTestTool from "./pages/ModelTestTool";
 import Monitoring from "./pages/Monitoring";
 import DoctorDashboard from "./pages/DoctorDashboard";
+import PatientManagement from "./pages/PatientManagement";
 
 
 
@@ -19,9 +20,10 @@ function Dashboard() {
   return (
     <div style={{ padding: 40 }}>
       <h1>Dashboard</h1>
-      <Link to="/symptom-checker">Go to Symptom Checker</Link>
+      <Link to="/model-test-tool">Go to Model Test Tool</Link>
       <Link to="/monitoring">Go to Monitoring</Link>
       <Link to="/doctordashboard">Go to Doctors Dashboard</Link>
+      <Link to="/patientmanagement">Go to Patient Management</Link>
     </div>
   );
 }
@@ -41,10 +43,10 @@ export default function App() {
             }
           />
           <Route
-            path="/symptom-checker"
+            path="/model-test-tool"
             element={
               <ProtectedRoute>
-                <SymptomChecker />
+                <ModelTestTool />
               </ProtectedRoute>
             }
           />
@@ -66,7 +68,15 @@ export default function App() {
               </ProtectedRoute>
             }
           />
-
+          
+          <Route
+            path="/patientmanagement"
+            element={
+              <ProtectedRoute>
+                <PatientManagement />
+              </ProtectedRoute>
+            }
+          />
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </BrowserRouter>
