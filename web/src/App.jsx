@@ -5,6 +5,9 @@ import Login from "./pages/Login";
 import { Link } from "react-router-dom";
 
 import SymptomChecker from "./pages/SymptomChecker";
+import Monitoring from "./pages/Monitoring";
+
+
 
 function ProtectedRoute({ children }) {
   const { token } = useAuth();
@@ -16,6 +19,7 @@ function Dashboard() {
     <div style={{ padding: 40 }}>
       <h1>Dashboard</h1>
       <Link to="/symptom-checker">Go to Symptom Checker</Link>
+      <Link to="/monitoring">Go to Monitoring</Link>
     </div>
   );
 }
@@ -42,6 +46,16 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+
+          <Route
+            path="/monitoring"
+            element={
+              <ProtectedRoute>
+                <Monitoring />
+              </ProtectedRoute>
+            }
+          />
+
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </BrowserRouter>
