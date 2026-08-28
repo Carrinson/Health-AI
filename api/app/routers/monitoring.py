@@ -60,3 +60,42 @@ def get_recent(
         }
         for r in rows
     ]
+
+@router.get("/queue")
+def get_queue(
+    user: Annotated[User, Depends(require_roles(UserRole.DOCTOR, UserRole.HOSPITAL_ADMIN, UserRole.PLATFORM_ADMIN))],
+    db: Annotated[Session, Depends(get_db)],
+):
+    """Most recent symptom-check record per patient, newest first.
+    Urgency comes from the record's saved content, not a separate column —
+    it's parsed out below since we stored the full response as JSON."""
+    import json
+
+    from app.models.record import MedicalRecord, RecordType
+
+    records = (
+        db.query(MedicalRecord)
+        .filter(MedicalRecord.record_type == RecordType.SYMPTOM_CHECK)
+        .order_by(MedicalRecord.created_at.desc())
+        .limit(50)
+        .all()
+    )
+
+    queue = []
+    for r in records:
+        content = json.loads(r.content)
+        queue.append({
+            "record_id": r.id,
+            "patient_id": r.patient_id,
+            "title": r.title,
+            "urgency": content.get("urgency"),
+            "predictions": content.get("predictions", []),
+            "red_flags": content.get("red_flags", []),
+            "created_at": r.created_at.isoformat(),
+        })
+
+    # Sort emergency first, then see_a_doctor, then insufficient_info
+    priority = {"emergency": 0, "see_a_doctor": 1, "insufficient_info": 2}
+    queue.sort(key=lambda x: priority.get(x["urgency"], 3))
+
+    return queue

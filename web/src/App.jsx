@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 
 import SymptomChecker from "./pages/SymptomChecker";
 import Monitoring from "./pages/Monitoring";
+import DoctorDashboard from "./pages/DoctorDashboard";
 
 
 
@@ -20,6 +21,7 @@ function Dashboard() {
       <h1>Dashboard</h1>
       <Link to="/symptom-checker">Go to Symptom Checker</Link>
       <Link to="/monitoring">Go to Monitoring</Link>
+      <Link to="/doctordashboard">Go to Doctors Dashboard</Link>
     </div>
   );
 }
@@ -52,6 +54,15 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <Monitoring />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/doctordashboard"
+            element={
+              <ProtectedRoute>
+                <DoctorDashboard />
               </ProtectedRoute>
             }
           />
