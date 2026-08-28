@@ -65,3 +65,13 @@ def update_status(
     db.commit()
     db.refresh(appt)
     return appt
+@router.get("/doctors")
+def list_doctors(
+    user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+):
+    """Any authenticated user can see the doctor list — needed to book.
+    Returns only public fields, never anything from the auth table beyond
+    what's necessary to pick a clinician."""
+    doctors = db.query(User).filter(User.role == UserRole.DOCTOR).all()
+    return [{"id": d.id, "fullname": d.fullname} for d in doctors]
