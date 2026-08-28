@@ -8,6 +8,7 @@ from app.routers import auth, predictions
 from app.routers import appointments, auth, predictions, records
 from app.routers import monitoring
 from app.routers import availability
+from app.routers import chat
 
 settings = get_settings()
 
@@ -17,6 +18,7 @@ app = FastAPI(
     version="0.1.0",
 )
 
+app.include_router(chat.router)
 app.include_router(availability.router)
 app.include_router(monitoring.router)
 app.include_router(auth.router)
