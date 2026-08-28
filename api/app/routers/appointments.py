@@ -25,12 +25,23 @@ def book_appointment(
     if not doctor:
         raise HTTPException(400, "Selected doctor does not exist")
 
+    # Reject double-booking the exact same slot — the real availability
+    # check (is this slot within the doctor's working hours) happens
+    # client-side by only offering real slots from /availability/{id}/slots;
+    # this is the server-side guard against a race or a stale UI.
+    existing = db.query(Appointment).filter(
+        Appointment.doctor_id == payload.doctor_id,
+        Appointment.scheduled_for == payload.scheduled_for,
+        Appointment.status != AppointmentStatus.CANCELLED,
+    ).first()
+    if existing:
+        raise HTTPException(409, "That slot has just been booked by someone else")
+
     appt = Appointment(patient_id=user.id, **payload.model_dump())
     db.add(appt)
     db.commit()
     db.refresh(appt)
     return appt
-
 
 @router.get("", response_model=list[AppointmentOut])
 def list_my_appointments(

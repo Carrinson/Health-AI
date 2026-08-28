@@ -1,11 +1,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+import uvicorn
 
 from app.config import get_settings
 
 from app.routers import auth, predictions
 from app.routers import appointments, auth, predictions, records
 from app.routers import monitoring
+from app.routers import availability
 
 settings = get_settings()
 
@@ -15,6 +17,7 @@ app = FastAPI(
     version="0.1.0",
 )
 
+app.include_router(availability.router)
 app.include_router(monitoring.router)
 app.include_router(auth.router)
 app.include_router(predictions.router)
@@ -36,3 +39,8 @@ def health():
     """Liveness check. Docker, nginx and UptimeRobot all poll this."""
     return {"status": "ok", "app": settings.app_name}
 
+if __name__ == "__main__":
+    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
+
+
+# http://127.0.0.1:8000/docs#/ link to check on
