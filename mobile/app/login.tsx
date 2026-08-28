@@ -3,8 +3,10 @@ import { View, Text, TextInput, Pressable, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Notifications from "expo-notifications";
+import Constants from "expo-constants";
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL;; // match checker.tsx — same laptop IP
+const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
 export default function Login() {
   const router = useRouter();
@@ -14,6 +16,28 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
+  async function registerPushToken(accessToken: string) {
+    try {
+      const { status } = await Notifications.requestPermissionsAsync();
+      if (status !== "granted") return;
+
+      const pushToken = (
+        await Notifications.getExpoPushTokenAsync({
+          projectId: Constants.expoConfig?.extra?.eas?.projectId,
+        })
+      ).data;
+
+      await axios.post(
+        `${API_URL}/notifications/register-token`,
+        { expo_push_token: pushToken },
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      );
+    } catch {
+      // Push registration failing shouldn't block login — it's an
+      // enhancement, not a requirement to use the app.
+    }
+  }
+
   async function handleSubmit() {
     setError("");
     try {
@@ -21,8 +45,6 @@ export default function Login() {
         await axios.post(`${API_URL}/auth/register`, { email, password, fullname });
       }
 
-      // OAuth2PasswordRequestForm expects form-encoded data, not JSON —
-      // same requirement you already hit on web.
       const form = new URLSearchParams();
       form.append("username", email);
       form.append("password", password);
@@ -32,6 +54,7 @@ export default function Login() {
       });
 
       await AsyncStorage.setItem("token", res.data.access_token);
+      await registerPushToken(res.data.access_token);
       router.push("/home");
     } catch {
       setError(isRegister ? "Registration failed — email may already be in use" : "Incorrect email or password");

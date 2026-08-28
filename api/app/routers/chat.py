@@ -9,16 +9,22 @@ from app.core.deps import get_current_user
 from app.core.security import decode_access_token
 from app.database import SessionLocal, get_db
 from app.models.chat_message import ChatMessage
+from app.models.push_token import PushToken
 from app.models.user import User
+from app.services.push import send_push_notification
 
 # Two routers: one for the WebSocket (/ws/chat), one for plain HTTP
-# endpoints (/chat/history, /chat/contacts). They're related features but
+# endpoints (/chat/history, /chat/contacts). Related features, but
 # genuinely different route shapes, so a shared prefix was the wrong call.
 ws_router = APIRouter(prefix="/ws", tags=["chat"])
 router = APIRouter(prefix="/chat", tags=["chat"])
 
 
 class ConnectionManager:
+    """Tracks which user_id is connected on which WebSocket, so a message
+    from patient->doctor can be pushed to the doctor's live connection if
+    they're online. If not, we fall back to a push notification instead."""
+
     def __init__(self):
         self.active: dict[int, WebSocket] = {}
 
@@ -40,6 +46,8 @@ manager = ConnectionManager()
 
 @ws_router.websocket("/chat")
 async def chat_endpoint(websocket: WebSocket, token: str):
+    """Token passed as a query param, since WebSocket connections can't
+    carry an Authorization header the way normal HTTP requests do."""
     payload = decode_access_token(token)
     if payload is None:
         await websocket.close(code=4001)
@@ -61,6 +69,9 @@ async def chat_endpoint(websocket: WebSocket, token: str):
             recipient_id = data["recipient_id"]
             content = data["content"]
 
+            # Persist first — a message must survive even if the recipient
+            # is offline right now. Live delivery is a bonus, not the
+            # source of truth.
             msg = ChatMessage(sender_id=user.id, recipient_id=recipient_id, content=content)
             db.add(msg)
             db.commit()
@@ -73,8 +84,21 @@ async def chat_endpoint(websocket: WebSocket, token: str):
                 "created_at": msg.created_at.isoformat(),
             }
 
-            await manager.send_to(recipient_id, payload_out)
+            # Echo back to sender so their own UI updates immediately.
             await websocket.send_json(payload_out)
+
+            # Deliver live if the recipient is connected; otherwise fall
+            # back to a push notification.
+            if recipient_id in manager.active:
+                await manager.send_to(recipient_id, payload_out)
+            else:
+                token_row = db.query(PushToken).filter(PushToken.user_id == recipient_id).first()
+                if token_row:
+                    await send_push_notification(
+                        token_row.expo_push_token,
+                        title=f"New message from {user.fullname}",
+                        body=content[:100],
+                    )
 
     except WebSocketDisconnect:
         manager.disconnect(user.id)
@@ -110,6 +134,10 @@ def get_contacts(
     user: Annotated[User, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)],
 ):
+    """Who this user can message. Patients see doctors they've booked an
+    appointment with; doctors see patients who've booked with them.
+    Deliberately restrictive — patients shouldn't be able to message
+    doctors they have no relationship with."""
     from app.models.appointment import Appointment
     from app.models.user import UserRole
 
