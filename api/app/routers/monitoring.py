@@ -1,3 +1,4 @@
+from http.client import HTTPException
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
@@ -194,3 +195,65 @@ def get_analytics(
         },
     }
 
+@router.get("/patients/{patient_id}")
+def get_patient_detail(
+    patient_id: int,
+    user: Annotated[User, Depends(require_roles(UserRole.DOCTOR, UserRole.HOSPITAL_ADMIN, UserRole.PLATFORM_ADMIN))],
+    db: Annotated[Session, Depends(get_db)],
+):
+    """Full picture of one patient — profile, every record, every
+    appointment. This is a staff-only view; a patient's own records
+    endpoint (GET /records) already filters to themselves only, so this
+    is a deliberately separate, broader query reserved for staff roles."""
+    import json
+
+    from app.models.appointment import Appointment
+    from app.models.record import MedicalRecord
+
+    patient = db.query(User).filter(User.id == patient_id, User.role == UserRole.PATIENT).first()
+    if not patient:
+        raise HTTPException(404, "Patient not found")
+
+    records = (
+        db.query(MedicalRecord)
+        .filter(MedicalRecord.patient_id == patient_id)
+        .order_by(MedicalRecord.created_at.desc())
+        .all()
+    )
+    appointments = (
+        db.query(Appointment)
+        .filter(Appointment.patient_id == patient_id)
+        .order_by(Appointment.scheduled_for.desc())
+        .all()
+    )
+
+    def parse_record(r):
+        try:
+            content = json.loads(r.content)
+        except (json.JSONDecodeError, TypeError):
+            content = {}
+        return {
+            "id": r.id,
+            "record_type": r.record_type.value,
+            "title": r.title,
+            "content": content,
+            "created_at": r.created_at.isoformat(),
+        }
+
+    return {
+        "id": patient.id,
+        "fullname": patient.fullname,
+        "email": patient.email,
+        "created_at": patient.created_at.isoformat(),
+        "records": [parse_record(r) for r in records],
+        "appointments": [
+            {
+                "id": a.id,
+                "doctor_id": a.doctor_id,
+                "scheduled_for": a.scheduled_for.isoformat(),
+                "reason": a.reason,
+                "status": a.status.value,
+            }
+            for a in appointments
+        ],
+    }
