@@ -5,7 +5,7 @@ from app.config import get_settings
 
 from app.routers import auth, predictions
 from app.routers import appointments, auth, predictions, records
-
+from app.routers import monitoring
 
 settings = get_settings()
 
@@ -15,7 +15,7 @@ app = FastAPI(
     version="0.1.0",
 )
 
-
+app.include_router(monitoring.router)
 app.include_router(auth.router)
 app.include_router(predictions.router)
 app.include_router(records.router)
