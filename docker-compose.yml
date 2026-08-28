@@ -15,3 +15,4 @@ services:
       DEBUG: "false"
     volumes:
       - ./api/models:/app/models
+      - ./api/uploads:/app/uploads
