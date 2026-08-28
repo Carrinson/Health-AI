@@ -113,3 +113,36 @@ def get_history(
         {"id": m.id, "sender_id": m.sender_id, "content": m.content, "created_at": m.created_at.isoformat()}
         for m in messages
     ]
+
+@router.get("/contacts")
+def get_contacts(
+    user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+):
+    """Who this user can message. Patients see doctors they've booked an
+    appointment with; doctors see patients who've booked with them.
+    Deliberately restrictive — patients shouldn't be able to message
+    doctors they have no relationship with."""
+    from app.models.appointment import Appointment
+    from app.models.user import UserRole
+
+    if user.role == UserRole.PATIENT:
+        doctor_ids = (
+            db.query(Appointment.doctor_id)
+            .filter(Appointment.patient_id == user.id)
+            .distinct()
+            .all()
+        )
+        ids = [d[0] for d in doctor_ids]
+        contacts = db.query(User).filter(User.id.in_(ids)).all()
+    else:
+        patient_ids = (
+            db.query(Appointment.patient_id)
+            .filter(Appointment.doctor_id == user.id)
+            .distinct()
+            .all()
+        )
+        ids = [p[0] for p in patient_ids]
+        contacts = db.query(User).filter(User.id.in_(ids)).all()
+
+    return [{"id": c.id, "fullname": c.fullname} for c in contacts]

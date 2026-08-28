@@ -23,6 +23,10 @@ export default function Home() {
         </Text>
       </Pressable>
 
+      <Pressable style={styles.shortcutCard} onPress={() => router.push("/chat")}>
+        <Text style={styles.shortcutText}>Messages</Text>
+      </Pressable>
+
       <View style={styles.shortcuts}>
         <Text style={styles.sectionLabel}>Shortcuts</Text>
         <View style={styles.grid}>

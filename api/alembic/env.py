@@ -14,6 +14,7 @@ from app.models.record import MedicalRecord  # noqa: F401
 from app.models.appointment import Appointment  # noqa: F401
 from app.models.audit_log import PredictionAuditLog  # noqa: F401
 from app.models.availability import DoctorAvailability  # noqa: F401
+from app.models.chat_message import ChatMessage  # noqa: F401
 
 config.set_main_option("sqlalchemy.url", get_settings().database_url)
 
