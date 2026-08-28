@@ -2,25 +2,23 @@ import json
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
+from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
 
-from fastapi import APIRouter
-from sqlalchemy import or_, and_
-
-from app.core.deps import get_current_user  # add to top-level imports properly
+from app.core.deps import get_current_user
 from app.core.security import decode_access_token
 from app.database import SessionLocal, get_db
 from app.models.chat_message import ChatMessage
 from app.models.user import User
 
-router = APIRouter(prefix="/ws", tags=["chat"])
+# Two routers: one for the WebSocket (/ws/chat), one for plain HTTP
+# endpoints (/chat/history, /chat/contacts). They're related features but
+# genuinely different route shapes, so a shared prefix was the wrong call.
+ws_router = APIRouter(prefix="/ws", tags=["chat"])
+router = APIRouter(prefix="/chat", tags=["chat"])
 
 
 class ConnectionManager:
-    """Tracks which user_id is connected on which WebSocket, so a message
-    from patient->doctor can be pushed to the doctor's live connection if
-    they're online, in addition to being saved to the database regardless."""
-
     def __init__(self):
         self.active: dict[int, WebSocket] = {}
 
@@ -40,10 +38,8 @@ class ConnectionManager:
 manager = ConnectionManager()
 
 
-@router.websocket("/chat")
+@ws_router.websocket("/chat")
 async def chat_endpoint(websocket: WebSocket, token: str):
-    """Token passed as a query param, since WebSocket connections can't
-    carry an Authorization header the way normal HTTP requests do."""
     payload = decode_access_token(token)
     if payload is None:
         await websocket.close(code=4001)
@@ -65,9 +61,6 @@ async def chat_endpoint(websocket: WebSocket, token: str):
             recipient_id = data["recipient_id"]
             content = data["content"]
 
-            # Persist first — a message must survive even if the recipient
-            # is offline right now. Live delivery is a bonus, not the
-            # source of truth.
             msg = ChatMessage(sender_id=user.id, recipient_id=recipient_id, content=content)
             db.add(msg)
             db.commit()
@@ -80,9 +73,7 @@ async def chat_endpoint(websocket: WebSocket, token: str):
                 "created_at": msg.created_at.isoformat(),
             }
 
-            # Deliver live if the recipient is connected right now.
             await manager.send_to(recipient_id, payload_out)
-            # Echo back to sender so their own UI updates immediately.
             await websocket.send_json(payload_out)
 
     except WebSocketDisconnect:
@@ -97,7 +88,6 @@ def get_history(
     user: Annotated[User, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)],
 ):
-
     messages = (
         db.query(ChatMessage)
         .filter(
@@ -114,15 +104,12 @@ def get_history(
         for m in messages
     ]
 
+
 @router.get("/contacts")
 def get_contacts(
     user: Annotated[User, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)],
 ):
-    """Who this user can message. Patients see doctors they've booked an
-    appointment with; doctors see patients who've booked with them.
-    Deliberately restrictive — patients shouldn't be able to message
-    doctors they have no relationship with."""
     from app.models.appointment import Appointment
     from app.models.user import UserRole
 
