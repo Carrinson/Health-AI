@@ -147,3 +147,50 @@ def list_patients(
         })
 
     return result
+
+@router.get("/analytics")
+def get_analytics(
+    user: Annotated[User, Depends(require_roles(UserRole.DOCTOR, UserRole.HOSPITAL_ADMIN, UserRole.PLATFORM_ADMIN))],
+    db: Annotated[Session, Depends(get_db)],
+):
+    """Urgency breakdown and appointment stats. Reuses the same
+    prediction_audit_log table as /monitoring/stats — this endpoint just
+    slices it a different way for a different screen."""
+    from app.models.appointment import Appointment, AppointmentStatus
+
+    urgency_counts = (
+        db.query(PredictionAuditLog.urgency, func.count(PredictionAuditLog.id))
+        .filter(PredictionAuditLog.urgency.isnot(None))
+        .group_by(PredictionAuditLog.urgency)
+        .all()
+    )
+    total_with_urgency = sum(c for _, c in urgency_counts)
+
+    appt_total = db.query(func.count(Appointment.id)).scalar()
+    appt_confirmed = db.query(func.count(Appointment.id)).filter(
+        Appointment.status == AppointmentStatus.CONFIRMED
+    ).scalar()
+    appt_completed = db.query(func.count(Appointment.id)).filter(
+        Appointment.status == AppointmentStatus.COMPLETED
+    ).scalar()
+    appt_cancelled = db.query(func.count(Appointment.id)).filter(
+        Appointment.status == AppointmentStatus.CANCELLED
+    ).scalar()
+
+    return {
+        "urgency_distribution": [
+            {
+                "urgency": u,
+                "count": c,
+                "percentage": round(c / total_with_urgency * 100, 1) if total_with_urgency else 0,
+            }
+            for u, c in urgency_counts
+        ],
+        "appointments": {
+            "total": appt_total,
+            "confirmed": appt_confirmed,
+            "completed": appt_completed,
+            "cancelled": appt_cancelled,
+        },
+    }
+

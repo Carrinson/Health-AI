@@ -8,6 +8,7 @@ import ModelTestTool from "./pages/ModelTestTool";
 import Monitoring from "./pages/Monitoring";
 import DoctorDashboard from "./pages/DoctorDashboard";
 import PatientManagement from "./pages/PatientManagement";
+import AppointmentManagement from "./pages/AppointmentManagement";
 
 
 
@@ -22,8 +23,9 @@ function Dashboard() {
       <h1>Dashboard</h1>
       <Link to="/model-test-tool">Go to Model Test Tool</Link>
       <Link to="/monitoring">Go to Monitoring</Link>
-      <Link to="/doctordashboard">Go to Doctors Dashboard</Link>
-      <Link to="/patientmanagement">Go to Patient Management</Link>
+      <Link to="/doctor-dashboard">Go to Doctors Dashboard</Link>
+      <Link to="/patient-management">Go to Patient Management</Link>
+      <Link to="/appointment-management">Go to Appointment Management</Link>
     </div>
   );
 }
@@ -61,7 +63,7 @@ export default function App() {
           />
 
           <Route
-            path="/doctordashboard"
+            path="/doctor-dashboard"
             element={
               <ProtectedRoute>
                 <DoctorDashboard />
@@ -70,13 +72,23 @@ export default function App() {
           />
           
           <Route
-            path="/patientmanagement"
+            path="/patient-management"
             element={
               <ProtectedRoute>
                 <PatientManagement />
               </ProtectedRoute>
             }
           />
+
+          <Route
+            path="/appointment-management"
+            element={
+              <ProtectedRoute>
+                <AppointmentManagement />
+              </ProtectedRoute>
+            }
+          />
+
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </BrowserRouter>
