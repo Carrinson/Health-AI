@@ -39,8 +39,3 @@ def health():
     """Liveness check. Docker, nginx and UptimeRobot all poll this."""
     return {"status": "ok", "app": settings.app_name}
 
-if __name__ == "__main__":
-    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
-
-
-# http://127.0.0.1:8000/docs#/ link to check on
