@@ -1,13 +1,13 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
-import DashboardLayout from "./components/DashboardLayout";
+import DashboardLayout from "./components/Dashboard";
 import Login from "./pages/Login";
 import DoctorDashboard from "./pages/DoctorDashboard";
 import PatientManagement from "./pages/PatientManagement";
 import AppointmentManagement from "./pages/AppointmentManagement";
 import Analytics from "./pages/Analytics";
 import Monitoring from "./pages/Monitoring";
-import SymptomChecker from "./pages/SymptomChecker";
+import ModelTestTool from "./pages/ModelTestTool";
 import Chat from "./pages/Chat";
 import HospitalDashboard from "./pages/HospitalDashboard";
 import Reports from "./pages/Reports";
@@ -43,7 +43,7 @@ export default function App() {
           <Route path="/chat" element={withLayout(Chat)} />
           <Route path="/hospital" element={withLayout(HospitalDashboard)} />
           <Route path="/reports" element={withLayout(Reports)} />
-          <Route path="/model-test" element={withLayout(SymptomChecker)} />
+          <Route path="/model-test" element={withLayout(ModelTestTool)} />
           <Route path="/admin/users" element={withLayout(AdminUsers)} />
           <Route path="/admin/create-doctor" element={withLayout(AdminCreateDoctor)} />
           <Route path="*" element={<Navigate to="/login" replace />} />

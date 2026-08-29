@@ -4,10 +4,10 @@ import { useAuth } from "../context/AuthContext";
 const ALL_NAV_ITEMS = [
   { path: "/dashboard", label: "Patient appointments", roles: ["doctor", "hospital_admin", "platform_admin"] },
   { path: "/patients", label: "Patient management", roles: ["doctor", "hospital_admin", "platform_admin"] },
-  { path: "/appointments", label: "Appointments", roles: ["doctor", "hospital_admin", "platform_admin"] },
+  { path: "/appointments", label: "Appointments", roles: ["doctor"] },
   { path: "/analytics", label: "Analytics", roles: ["doctor", "hospital_admin", "platform_admin"] },
   { path: "/monitoring", label: "AI monitoring", roles: ["doctor", "hospital_admin", "platform_admin"] },
-  { path: "/chat", label: "Messages", roles: ["doctor", "hospital_admin", "platform_admin"] },
+  { path: "/chat", label: "Messages", roles: ["doctor"] },
   { path: "/hospital", label: "Hospital dashboard", roles: ["hospital_admin", "platform_admin"] },
   { path: "/reports", label: "Reports", roles: ["hospital_admin", "platform_admin"] },
   { path: "/model-test", label: "Model test tool", roles: ["doctor", "hospital_admin", "platform_admin"] },
