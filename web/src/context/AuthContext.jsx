@@ -5,6 +5,7 @@ const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(localStorage.getItem("token"));
+  const [role, setRole] = useState(localStorage.getItem("role"));
 
   async function login(email, password) {
     // OAuth2PasswordRequestForm on the backend expects FORM data, not JSON —
@@ -20,15 +21,25 @@ export function AuthProvider({ children }) {
 
     localStorage.setItem("token", res.data.access_token);
     setToken(res.data.access_token);
+
+    // Fetch the user's role right after login so the sidebar can filter
+    // itself immediately, without a second round trip on every page.
+    const meRes = await client.get("/auth/me", {
+      headers: { Authorization: `Bearer ${res.data.access_token}` },
+    });
+    localStorage.setItem("role", meRes.data.role);
+    setRole(meRes.data.role);
   }
 
   function logout() {
     localStorage.removeItem("token");
+    localStorage.removeItem("role");
     setToken(null);
+    setRole(null);
   }
 
   return (
-    <AuthContext.Provider value={{ token, login, logout }}>
+    <AuthContext.Provider value={{ token, role, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
