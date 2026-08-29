@@ -1,9 +1,11 @@
-import { useEffect, useState } from "react";
+ import { useEffect, useState } from "react";
 import { View, Text, FlatList, StyleSheet, ActivityIndicator } from "react-native";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import NetInfo from "@react-native-community/netinfo";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
+const CACHE_KEY = "cached_records";
 
 const URGENCY_STYLE: Record<string, { bg: string; label: string }> = {
   emergency: { bg: "#DC2626", label: "Emergency" },
@@ -15,17 +17,44 @@ export default function Records() {
   const [records, setRecords] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [isOffline, setIsOffline] = useState(false);
 
   useEffect(() => {
     async function load() {
+      const net = await NetInfo.fetch();
+
+      if (!net.isConnected) {
+        // No connection at all — skip the network call entirely and go
+        // straight to whatever was last cached.
+        const cached = await AsyncStorage.getItem(CACHE_KEY);
+        if (cached) {
+          setRecords(JSON.parse(cached));
+          setIsOffline(true);
+        } else {
+          setError("No internet connection and no cached records available.");
+        }
+        setLoading(false);
+        return;
+      }
+
       try {
         const token = await AsyncStorage.getItem("token");
         const res = await axios.get(`${API_URL}/records`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setRecords(res.data);
+        // Cache the fresh data for the next time there's no connection.
+        await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(res.data));
       } catch {
-        setError("Failed to load records");
+        // Network claims to be connected but the request still failed
+        // (e.g. server briefly down) — fall back to cache here too.
+        const cached = await AsyncStorage.getItem(CACHE_KEY);
+        if (cached) {
+          setRecords(JSON.parse(cached));
+          setIsOffline(true);
+        } else {
+          setError("Failed to load records");
+        }
       } finally {
         setLoading(false);
       }
@@ -41,7 +70,18 @@ export default function Records() {
       contentContainerStyle={styles.container}
       data={records}
       keyExtractor={(item) => String(item.id)}
-      ListHeaderComponent={<Text style={styles.title}>Records</Text>}
+      ListHeaderComponent={
+        <>
+          <Text style={styles.title}>Records</Text>
+          {isOffline && (
+            <View style={styles.offlineBanner}>
+              <Text style={styles.offlineText}>
+                You're offline — showing your last saved records.
+              </Text>
+            </View>
+          )}
+        </>
+      }
       renderItem={({ item }) => {
         let content: any = {};
         try {
@@ -73,6 +113,8 @@ export default function Records() {
 const styles = StyleSheet.create({
   container: { padding: 24, gap: 12 },
   title: { fontSize: 36, fontWeight: "700", letterSpacing: -0.5, marginBottom: 16 },
+  offlineBanner: { backgroundColor: "#F5F1E8", borderRadius: 6, padding: 12, marginBottom: 16 },
+  offlineText: { fontSize: 13, color: "#6B7280" },
   card: { borderWidth: 1, borderColor: "#E5E7EB", borderRadius: 8, padding: 16, gap: 10, marginBottom: 12 },
   cardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", gap: 12 },
   cardTitle: { fontSize: 16, fontWeight: "600", flex: 1 },
