@@ -1,18 +1,14 @@
 """
-Thin client for the locally-running Ollama instance. Ollama listens on
-localhost:11434 by default — since it runs directly on the VPS host (not
-in Docker), the API container needs to reach it via the host, not via a
-Docker service name.
+Thin client for the locally-running Ollama instance. Ollama runs directly
+on the VPS host (not in Docker), so the API container reaches it via the
+Docker network's gateway IP, not localhost or a container name.
 """
 
 import httpx
 
-OLLAMA_URL = "http://host.docker.internal:11434/api/generate"
-# NOTE: host.docker.internal works on Docker Desktop (Mac/Windows) but is
-# NOT reliable on Linux hosts — which is exactly what the VPS is. On
-# Linux, containers reach the host via the bridge gateway IP instead.
-# Confirmed gateway from earlier tonight: 172.17.0.1
-OLLAMA_URL_LINUX = "http://172.17.0.1:11434/api/generate"
+from app.config import get_settings
+
+settings = get_settings()
 
 SYSTEM_PROMPT = """You are a health information assistant for a demonstration app.
 
@@ -39,7 +35,7 @@ async def generate_answer(question: str, context: list[dict]) -> str:
 
     async with httpx.AsyncClient(timeout=90.0) as client:
         response = await client.post(
-            OLLAMA_URL_LINUX,
+            settings.ollama_url,
             json={"model": "qwen2.5:3b", "prompt": prompt, "stream": False},
         )
         response.raise_for_status()
