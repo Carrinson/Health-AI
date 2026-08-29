@@ -1,6 +1,9 @@
 from http.client import HTTPException
 from typing import Annotated
+import csv
+import io
 
+from fastapi.responses import StreamingResponse
 from fastapi import APIRouter, Depends
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -11,6 +14,24 @@ from app.models.audit_log import PredictionAuditLog
 from app.models.user import User, UserRole
 
 router = APIRouter(prefix="/monitoring", tags=["monitoring"])
+
+
+def _csv_response(rows: list[dict], filename: str) -> StreamingResponse:
+    """Shared CSV-building helper — every export follows the same shape:
+    list of dicts in, streamed CSV file out."""
+    output = io.StringIO()
+    if rows:
+        writer = csv.DictWriter(output, fieldnames=rows[0].keys())
+        writer.writeheader()
+        writer.writerows(rows)
+    output.seek(0)
+
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
 
 
 @router.get("/stats")
@@ -343,3 +364,61 @@ def get_doctor_detail(
             for a in appointments
         ],
     }
+
+@router.get("/export/patients")
+def export_patients(
+    user: Annotated[User, Depends(require_roles(UserRole.DOCTOR, UserRole.HOSPITAL_ADMIN, UserRole.PLATFORM_ADMIN))],
+    db: Annotated[Session, Depends(get_db)],
+):
+    patients = db.query(User).filter(User.role == UserRole.PATIENT).all()
+    rows = [
+        {"id": p.id, "fullname": p.fullname, "email": p.email, "joined": p.created_at.isoformat()}
+        for p in patients
+    ]
+    return _csv_response(rows, "patients.csv")
+
+
+@router.get("/export/appointments")
+def export_appointments(
+    user: Annotated[User, Depends(require_roles(UserRole.DOCTOR, UserRole.HOSPITAL_ADMIN, UserRole.PLATFORM_ADMIN))],
+    db: Annotated[Session, Depends(get_db)],
+):
+    from app.models.appointment import Appointment
+
+    appts = db.query(Appointment).all()
+    rows = [
+        {
+            "id": a.id,
+            "patient_id": a.patient_id,
+            "doctor_id": a.doctor_id,
+            "scheduled_for": a.scheduled_for.isoformat(),
+            "reason": a.reason,
+            "status": a.status.value,
+        }
+        for a in appts
+    ]
+    return _csv_response(rows, "appointments.csv")
+
+
+@router.get("/export/audit-log")
+def export_audit_log(
+    user: Annotated[User, Depends(require_roles(UserRole.HOSPITAL_ADMIN, UserRole.PLATFORM_ADMIN))],
+    db: Annotated[Session, Depends(get_db)],
+):
+    """Admin-only — the audit log is a compliance/oversight artifact, not
+    something an individual doctor needs to export."""
+    logs = db.query(PredictionAuditLog).order_by(PredictionAuditLog.created_at.desc()).all()
+    rows = [
+        {
+            "id": log.id,
+            "user_id": log.user_id,
+            "endpoint": log.endpoint,
+            "model_name": log.model_name,
+            "model_version": log.model_version,
+            "red_flag_triggered": log.red_flag_triggered,
+            "urgency": log.urgency,
+            "created_at": log.created_at.isoformat(),
+        }
+        for log in logs
+    ]
+    return _csv_response(rows, "audit_log.csv")

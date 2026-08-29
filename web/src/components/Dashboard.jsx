@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { path: "/model-test", label: "Model test tool" },
   { path: "/chat", label: "Messages" },
   { path: "/hospital", label: "Hospital dashboard" },
+  { path: "/reports", label: "Reports" },
 ];
 
 export default function DashboardLayout({ children }) {
