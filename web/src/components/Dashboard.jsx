@@ -13,6 +13,8 @@ const ALL_NAV_ITEMS = [
   { path: "/model-test", label: "Model test tool", roles: ["doctor", "hospital_admin", "platform_admin"] },
   { path: "/admin/users", label: "All users", roles: ["platform_admin"] },
   { path: "/admin/create-doctor", label: "Add a doctor", roles: ["platform_admin"] },
+  { path: "/assistant", label: "Assistant", roles: ["doctor", "hospital_admin", "platform_admin"] },
+  { path: "/escalations", label: "Escalations", roles: ["doctor", "hospital_admin", "platform_admin"] },
 ];
 
 export default function DashboardLayout({ children }) {

@@ -40,6 +40,9 @@ export default function Home() {
           <Pressable style={styles.shortcutCard} onPress={() => router.push("/upload")}>
             <Text style={styles.shortcutText}>Upload a document</Text>
           </Pressable>
+          <Pressable style={styles.shortcutCard} onPress={() => router.push("/assistant")}>
+            <Text style={styles.shortcutText}>Ask the assistant</Text>
+          </Pressable>
         </View>
       </View>
 

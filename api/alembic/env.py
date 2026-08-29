@@ -16,6 +16,7 @@ from app.models.audit_log import PredictionAuditLog  # noqa: F401
 from app.models.availability import DoctorAvailability  # noqa: F401
 from app.models.chat_message import ChatMessage  # noqa: F401
 from app.models.push_token import PushToken  # noqa: F401
+from app.models.escalation import AssistantEscalation  # noqa: F401
 
 config.set_main_option("sqlalchemy.url", get_settings().database_url)
 

@@ -69,6 +69,7 @@ CORPUS = [
                 "arm or jaw, or a feeling of pressure is a medical "
                 "emergency and requires immediate care — it can indicate a "
                 "heart attack.",
+        "emergency": True,
     },
     {
         "topic": "Heart disease risk factors",
@@ -78,6 +79,7 @@ CORPUS = [
                 "discomfort, shortness of breath, and unusual fatigue "
                 "during activity. Risk screening tools estimate likelihood "
                 "and are not a substitute for clinical evaluation.",
+        "emergency": True,
     },
     {
         "topic": "Palpitations",
@@ -119,6 +121,8 @@ CORPUS = [
                 "asthma, or infection. Sudden or severe breathlessness, "
                 "especially with chest pain, blue lips, or an inability to "
                 "speak in full sentences, is a medical emergency.",
+        "emergency": True,
+        
     },
     {
         "topic": "Sore throat",
@@ -162,6 +166,7 @@ CORPUS = [
                 "medical emergency — time-sensitive treatment "
                 "significantly affects outcomes. Call emergency services "
                 "immediately if these symptoms appear.",
+        "emergency": True,
     },
     {
         "topic": "Dizziness",
@@ -185,6 +190,7 @@ CORPUS = [
                 "reaction to medication, or a neurological event. This "
                 "should be assessed urgently, especially in older adults "
                 "or if it comes on suddenly.",
+        "emergency": True,
     },
     {
         "topic": "Seizure",
@@ -192,6 +198,7 @@ CORPUS = [
                 "five minutes, or repeated seizures without regaining "
                 "consciousness in between, is a medical emergency requiring "
                 "immediate care.",
+        "emergency": True,
     },
 
     # --- Gastrointestinal ---
@@ -234,6 +241,7 @@ CORPUS = [
                 "Any blood in the stool should be evaluated, and large "
                 "amounts of blood or blood combined with dizziness or "
                 "weakness is an emergency.",
+        "emergency": True,
     },
     {
         "topic": "Loss of appetite",
@@ -280,6 +288,7 @@ CORPUS = [
                 "liver problems, gallbladder issues, or blood conditions. "
                 "This should always be evaluated by a doctor, and rapid "
                 "onset with abdominal pain or confusion is an emergency.",
+        "emergency": True,
     },
 
     # --- Musculoskeletal ---
@@ -313,6 +322,7 @@ CORPUS = [
                 "stiffness combined with high fever, headache, and "
                 "sensitivity to light is a medical emergency that can "
                 "indicate meningitis.",
+        "emergency": True,
     },
     {
         "topic": "Cramps",
@@ -516,5 +526,6 @@ CORPUS = [
                 "consciousness, uncontrolled bleeding, or a high fever "
                 "with stiff neck and confusion. When in doubt about a "
                 "serious symptom combination, err toward emergency care.",
+        "emergency": True,
     },
 ]
