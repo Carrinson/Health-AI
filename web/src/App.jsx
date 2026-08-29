@@ -9,6 +9,7 @@ import Analytics from "./pages/Analytics";
 import Monitoring from "./pages/Monitoring";
 import SymptomChecker from "./pages/ModelTestTool";
 import Chat from "./pages/chat";
+import HouseDashboard from "./pages/HouseDashboard";
 
 function ProtectedRoute({ children }) {
   const { token } = useAuth();
@@ -38,6 +39,7 @@ export default function App() {
           <Route path="/monitoring" element={withLayout(Monitoring)} />
           <Route path="/model-test" element={withLayout(SymptomChecker)} />
           <Route path="/chat" element={withLayout(Chat)} />
+          <Route path="/hospital" element={withLayout(HouseDashboard)} />
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </BrowserRouter>

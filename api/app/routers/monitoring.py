@@ -257,3 +257,33 @@ def get_patient_detail(
             for a in appointments
         ],
     }
+
+@router.get("/hospital-overview")
+def get_hospital_overview(
+    user: Annotated[User, Depends(require_roles(UserRole.HOSPITAL_ADMIN, UserRole.PLATFORM_ADMIN))],
+    db: Annotated[Session, Depends(get_db)],
+):
+    """Hospital-level aggregate view — deliberately restricted to admin
+    roles, not doctors, since this shows organisation-wide numbers rather
+    than a single clinician's own patients."""
+    from app.models.appointment import Appointment
+    from app.models.record import MedicalRecord
+
+    total_patients = db.query(func.count(User.id)).filter(User.role == UserRole.PATIENT).scalar()
+    total_doctors = db.query(func.count(User.id)).filter(User.role == UserRole.DOCTOR).scalar()
+    total_records = db.query(func.count(MedicalRecord.id)).scalar()
+    total_appointments = db.query(func.count(Appointment.id)).scalar()
+
+    doctors = db.query(User).filter(User.role == UserRole.DOCTOR).all()
+    doctor_stats = []
+    for d in doctors:
+        appt_count = db.query(func.count(Appointment.id)).filter(Appointment.doctor_id == d.id).scalar()
+        doctor_stats.append({"id": d.id, "fullname": d.fullname, "appointment_count": appt_count})
+
+    return {
+        "total_patients": total_patients,
+        "total_doctors": total_doctors,
+        "total_records": total_records,
+        "total_appointments": total_appointments,
+        "doctors": doctor_stats,
+    }
