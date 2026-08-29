@@ -5,8 +5,8 @@ import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as WebBrowser from "expo-web-browser";
 import * as Google from "expo-auth-session/providers/google";
-import * as Notifications from "expo-notifications";
-import Constants from "expo-constants";
+// import * as Notifications from "expo-notifications";
+// import Constants from "expo-constants";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -34,18 +34,18 @@ export default function Login() {
     // Native push token registration — only works in a real standalone
     // build (EAS), not Expo Go, which can't load this native module.
     try {
-      const { status } = await Notifications.requestPermissionsAsync();
-      if (status !== "granted") return;
+      // const { status } = await Notifications.requestPermissionsAsync();
+      // if (status !== "granted") return;
 
-      const pushToken = (
-        await Notifications.getExpoPushTokenAsync({
-          projectId: Constants.expoConfig?.extra?.eas?.projectId,
-        })
-      ).data;
+      // const pushToken = (
+      //   await Notifications.getExpoPushTokenAsync({
+      //     projectId: Constants.expoConfig?.extra?.eas?.projectId,
+        // })
+      // ).data;
 
       await axios.post(
         `${API_URL}/notifications/register-token`,
-        { expo_push_token: pushToken },
+        // { expo_push_token: pushToken },
         { headers: { Authorization: `Bearer ${accessToken}` } }
       );
     } catch {
