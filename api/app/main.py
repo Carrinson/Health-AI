@@ -37,7 +37,7 @@ app.include_router(uploads.router)
 # Your Next.js app runs on :3000, this api on :8000 - different origins.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://healthai.carrinson.xyz", "http://localhost:5173"],
+    allow_origins=["https://healthai.carrinson.xyz", "https://healthaiweb.carrinson.xyz/login"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
