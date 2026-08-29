@@ -2,20 +2,24 @@ export default function Reports() {
   const baseUrl = import.meta.env.VITE_API_URL;
 
   function download(path) {
-    const token = localStorage.getItem("token");
-    // Can't set an Authorization header on a plain link click, so open via
-    // fetch and trigger the browser's download from the blob instead.
-    fetch(`${baseUrl}${path}`, { headers: { Authorization: `Bearer ${token}` } })
-      .then((res) => res.blob())
-      .then((blob) => {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = path.split("/").pop() + ".csv";
-        a.click();
-        window.URL.revokeObjectURL(url);
-      });
-  }
+  const token = localStorage.getItem("token");
+  fetch(`${baseUrl}${path}`, { headers: { Authorization: `Bearer ${token}` } })
+    .then((res) => {
+      if (!res.ok) {
+        throw new Error("Export failed — Doctors cant export this file");
+      }
+      return res.blob();
+    })
+    .then((blob) => {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = path.split("/").pop() + ".csv";
+      a.click();
+      window.URL.revokeObjectURL(url);
+    })
+    .catch((err) => alert(err.message));
+}
 
   return (
     <div style={{ maxWidth: 720, margin: "0 auto", padding: "40px 32px" }}>
