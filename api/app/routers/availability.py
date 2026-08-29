@@ -20,10 +20,6 @@ def set_availability(
     user: Annotated[User, Depends(require_roles(UserRole.DOCTOR, UserRole.PLATFORM_ADMIN))],
     db: Annotated[Session, Depends(get_db)],
 ):
-    """A doctor sets ONE recurring weekly window at a time. Calling this
-    repeatedly for different days builds up their full week — there's no
-    bulk-set endpoint, which is fine for a demo but worth noting as a UX
-    gap in a real product."""
     if payload.start_time >= payload.end_time:
         raise HTTPException(400, "start_time must be before end_time")
 
@@ -63,10 +59,7 @@ def get_available_slots(
     db: Annotated[Session, Depends(get_db)],
 ):
     """Any authenticated patient calls this to see real bookable slots for
-    a doctor on a specific date — this is what real_appointment scheduling
-    actually needs, replacing the old 'book 24h out, no questions asked'
-    placeholder.
-    """
+    a doctor on a specific date."""
     weekday = date.weekday()
     windows = (
         db.query(DoctorAvailability)
@@ -76,7 +69,6 @@ def get_available_slots(
     if not windows:
         return []
 
-    # Existing bookings that day, so we can mark overlapping slots unavailable.
     day_start = datetime.combine(date, datetime.min.time())
     day_end = day_start + timedelta(days=1)
     booked = (
@@ -89,7 +81,12 @@ def get_available_slots(
         )
         .all()
     )
-    booked_times = {b.scheduled_for for b in booked}
+    # Normalise to naive datetimes for comparison — scheduled_for is stored
+    # with timezone info (DateTime(timezone=True)), but the slots we build
+    # below via datetime.combine() are naive. Comparing aware vs naive
+    # datetimes either raises or silently never matches, which was the bug:
+    # booked slots never showed as unavailable.
+    booked_times = {b.scheduled_for.replace(tzinfo=None) for b in booked}
 
     slots = []
     for w in windows:
@@ -100,7 +97,7 @@ def get_available_slots(
             slots.append(SlotOut(
                 start=current.isoformat(),
                 end=(current + step).isoformat(),
-                available=current not in booked_times,
+                available=current.replace(tzinfo=None) not in booked_times,
             ))
             current += step
 
