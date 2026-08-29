@@ -11,6 +11,7 @@ from app.routers import availability
 from app.routers.chat import router as chat_router, ws_router as chat_ws_router
 from app.routers import uploads
 from app.routers import admin
+from app.routers import assistant
 
 settings = get_settings()
 
@@ -20,6 +21,7 @@ app = FastAPI(
     version="0.1.0",
 )
 
+app.include_router(assistant.router)
 app.include_router(admin.router)
 app.include_router(chat_router)
 app.include_router(chat_ws_router)
