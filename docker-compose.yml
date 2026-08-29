@@ -6,13 +6,15 @@ services:
     ports:
       - "8000:8000"
     environment:
-      # host.docker.internal doesn't reliably work on Linux hosts (only
-      # Docker Desktop on Mac/Windows). On the VPS, the reliable way for
-      # one container to reach another container it doesn't share a
-      # compose file with is via the host's own network.
-      DATABASE_URL: postgresql+psycopg://healthai:${POSTGRES_PASSWORD}@172.17.0.1:5432/healthai
+      DATABASE_URL: postgresql+psycopg://healthai:${POSTGRES_PASSWORD}@postgres:5432/healthai
       SECRET_KEY: ${SECRET_KEY}
       DEBUG: "false"
     volumes:
       - ./api/models:/app/models
       - ./api/uploads:/app/uploads
+    networks:
+      - healthai-net
+
+networks:
+  healthai-net:
+    external: true
