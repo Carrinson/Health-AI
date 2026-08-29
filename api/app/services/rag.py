@@ -43,10 +43,11 @@ def retrieve(query: str, top_k: int = 3) -> list[dict]:
     top_indices = np.argsort(scores)[-top_k:][::-1]
 
     return [
-        {
-            "topic": CORPUS[i]["topic"],
-            "text": CORPUS[i]["text"],
-            "score": round(float(scores[i]), 4),
-        }
-        for i in top_indices
-    ]
+    {
+        "topic": CORPUS[i]["topic"],
+        "text": CORPUS[i]["text"],
+        "emergency": CORPUS[i].get("emergency", False),
+        "score": round(float(scores[i]), 4),
+    }
+    for i in top_indices
+]
