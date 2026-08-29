@@ -287,3 +287,59 @@ def get_hospital_overview(
         "total_appointments": total_appointments,
         "doctors": doctor_stats,
     }
+
+@router.get("/doctors/{doctor_id}")
+def get_doctor_detail(
+    doctor_id: int,
+    user: Annotated[User, Depends(require_roles(UserRole.HOSPITAL_ADMIN, UserRole.PLATFORM_ADMIN))],
+    db: Annotated[Session, Depends(get_db)],
+):
+    """Full picture of one doctor — profile, their set availability, and
+    every appointment they've handled. Admin-only, same reasoning as the
+    hospital overview: this is organisation-level oversight, not something
+    a doctor needs for their own account (they already see their own
+    appointments via GET /appointments)."""
+    from app.models.appointment import Appointment
+    from app.models.availability import DoctorAvailability
+
+    doctor = db.query(User).filter(User.id == doctor_id, User.role == UserRole.DOCTOR).first()
+    if not doctor:
+        raise HTTPException(404, "Doctor not found")
+
+    availability = (
+        db.query(DoctorAvailability)
+        .filter(DoctorAvailability.doctor_id == doctor_id)
+        .all()
+    )
+    appointments = (
+        db.query(Appointment)
+        .filter(Appointment.doctor_id == doctor_id)
+        .order_by(Appointment.scheduled_for.desc())
+        .all()
+    )
+
+    return {
+        "id": doctor.id,
+        "fullname": doctor.fullname,
+        "email": doctor.email,
+        "created_at": doctor.created_at.isoformat(),
+        "availability": [
+            {
+                "id": a.id,
+                "day_of_week": a.day_of_week,
+                "start_time": a.start_time.isoformat(),
+                "end_time": a.end_time.isoformat(),
+            }
+            for a in availability
+        ],
+        "appointments": [
+            {
+                "id": a.id,
+                "patient_id": a.patient_id,
+                "scheduled_for": a.scheduled_for.isoformat(),
+                "reason": a.reason,
+                "status": a.status.value,
+            }
+            for a in appointments
+        ],
+    }
