@@ -28,3 +28,5 @@ EXPOSE 8000
 # connections from within the container itself, and nginx (a separate
 # container) needs to reach this one over the network.
 CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+RUN apt-get update && apt-get install -y tesseract-ocr && rm -rf /var/lib/apt/lists/*

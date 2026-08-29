@@ -27,6 +27,7 @@ export default function Home() {
         <Text style={styles.shortcutText}>Messages</Text>
       </Pressable>
 
+
       <View style={styles.shortcuts}>
         <Text style={styles.sectionLabel}>Shortcuts</Text>
         <View style={styles.grid}>
@@ -35,6 +36,9 @@ export default function Home() {
           </Pressable>
           <Pressable style={styles.shortcutCard} onPress={() => router.push("/appointments")}>
             <Text style={styles.shortcutText}>Book an appointment</Text>
+          </Pressable>
+          <Pressable style={styles.shortcutCard} onPress={() => router.push("/upload")}>
+            <Text style={styles.shortcutText}>Upload a document</Text>
           </Pressable>
         </View>
       </View>

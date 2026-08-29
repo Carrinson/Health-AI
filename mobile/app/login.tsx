@@ -3,8 +3,8 @@ import { View, Text, TextInput, Pressable, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import * as Notifications from "expo-notifications";
-import Constants from "expo-constants";
+// import * as Notifications from "expo-notifications";
+// import Constants from "expo-constants";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
@@ -17,25 +17,25 @@ export default function Login() {
   const [error, setError] = useState("");
 
   async function registerPushToken(accessToken: string) {
-    try {
-      const { status } = await Notifications.requestPermissionsAsync();
-      if (status !== "granted") return;
+    // try {
+    //   const { status } = await Notifications.requestPermissionsAsync();
+    //   if (status !== "granted") return;
 
-      const pushToken = (
-        await Notifications.getExpoPushTokenAsync({
-          projectId: Constants.expoConfig?.extra?.eas?.projectId,
-        })
-      ).data;
+    //   const pushToken = (
+    //     await Notifications.getExpoPushTokenAsync({
+    //       projectId: Constants.expoConfig?.extra?.eas?.projectId,
+    //     })
+    //   ).data;
 
-      await axios.post(
-        `${API_URL}/notifications/register-token`,
-        { expo_push_token: pushToken },
-        { headers: { Authorization: `Bearer ${accessToken}` } }
-      );
-    } catch {
-      // Push registration failing shouldn't block login — it's an
-      // enhancement, not a requirement to use the app.
-    }
+    //   await axios.post(
+    //     `${API_URL}/notifications/register-token`,
+    //     { expo_push_token: pushToken },
+    //     { headers: { Authorization: `Bearer ${accessToken}` } }
+    //   );
+    // } catch {
+    //   // Push registration failing shouldn't block login — it's an
+    //   // enhancement, not a requirement to use the app.
+    // }
   }
 
   async function handleSubmit() {

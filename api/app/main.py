@@ -9,6 +9,7 @@ from app.routers import appointments, auth, predictions, records
 from app.routers import monitoring
 from app.routers import availability
 from app.routers.chat import router as chat_router, ws_router as chat_ws_router
+from app.routers.uploads import upload_document
 
 settings = get_settings()
 
@@ -26,6 +27,7 @@ app.include_router(auth.router)
 app.include_router(predictions.router)
 app.include_router(records.router)
 app.include_router(appointments.router)
+app.include_router(upload_document.router)
 
 # The browser requests from a different origin unless the server opts in.
 # Your Next.js app runs on :3000, this api on :8000 - different origins.
