@@ -94,6 +94,7 @@ def list_escalations(
 ):
     rows = (
         db.query(AssistantEscalation)
+        .join(User, User.id == AssistantEscalation.patient_id)
         .order_by(AssistantEscalation.reviewed, AssistantEscalation.created_at.desc())
         .all()
     )
@@ -101,6 +102,7 @@ def list_escalations(
         {
             "id": r.id,
             "patient_id": r.patient_id,
+            "patient_name": r.patient.fullname,
             "question": r.question,
             "answer": r.answer,
             "matched_topics": r.matched_topics,

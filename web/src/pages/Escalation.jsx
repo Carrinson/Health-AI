@@ -34,7 +34,7 @@ export default function Escalations() {
       {unreviewed.map((item) => (
         <div key={item.id} style={styles.card}>
           <p style={styles.badge}>Unreviewed</p>
-          <p style={styles.meta}>Patient #{item.patient_id} · {new Date(item.created_at).toLocaleString()}</p>
+          <p style={styles.meta}>{item.patient_name} · {new Date(item.created_at).toLocaleString()}</p>
           <p style={styles.question}>"{item.question}"</p>
           <p style={styles.answer}>{item.answer}</p>
           <p style={styles.topics}>Matched: {item.matched_topics}</p>
