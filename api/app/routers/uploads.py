@@ -2,6 +2,10 @@ import uuid
 from pathlib import Path
 from typing import Annotated
 
+import json
+import pytesseract
+from PIL import Image
+
 from fastapi import APIRouter, Depends, File, UploadFile
 from sqlalchemy.orm import Session
 
@@ -34,6 +38,28 @@ async def upload_document(
 
     contents = await file.read()
     filepath.write_bytes(contents)
+
+    try:
+        extracted_text = pytesseract.image_to_string(Image.open(filepath))
+    except Exception:
+        # OCR failing shouldn't block the upload itself — the image is
+        # still saved and viewable even if text extraction fails.
+        extracted_text = ""
+
+    record = MedicalRecord(
+        patient_id=user.id,
+        record_type=RecordType.LAB_REPORT,
+        title="Uploaded document",
+        content=json.dumps({
+            "filename": filename,
+            "status": "processed" if extracted_text else "uploaded",
+            "extracted_text": extracted_text.strip(),
+        }),
+    )
+    db.add(record)
+    db.commit()
+
+    return {"filename": filename, "extracted_text": extracted_text.strip()}
 
     record = MedicalRecord(
         patient_id=user.id,
