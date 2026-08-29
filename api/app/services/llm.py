@@ -37,7 +37,7 @@ async def generate_answer(question: str, context: list[dict]) -> str:
         f"Answer:"
     )
 
-    async with httpx.AsyncClient(timeout=60.0) as client:
+    async with httpx.AsyncClient(timeout=90.0) as client:
         response = await client.post(
             OLLAMA_URL_LINUX,
             json={"model": "qwen2.5:3b", "prompt": prompt, "stream": False},
