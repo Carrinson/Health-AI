@@ -1,10 +1,14 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { View, Text, TextInput, Pressable, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as WebBrowser from "expo-web-browser";
+import * as Google from "expo-auth-session/providers/google";
 // import * as Notifications from "expo-notifications";
 // import Constants from "expo-constants";
+
+WebBrowser.maybeCompleteAuthSession();
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
@@ -16,26 +20,63 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
+  });
+
+  useEffect(() => {
+    if (response?.type === "success") {
+      handleGoogleLogin(response.authentication?.accessToken);
+    }
+  }, [response]);
+
   async function registerPushToken(accessToken: string) {
-    // try {
-    //   const { status } = await Notifications.requestPermissionsAsync();
-    //   if (status !== "granted") return;
+    try {
+      // Deferred until testing against a real build — expo-notifications
+      // isn't reliably supported in Expo Go.
+      // const { status } = await Notifications.requestPermissionsAsync();
+      // if (status !== "granted") return;
+      // const pushToken = (
+      //   await Notifications.getExpoPushTokenAsync({
+      //     projectId: Constants.expoConfig?.extra?.eas?.projectId,
+      //   })
+      // ).data;
+      // await axios.post(
+      //   `${API_URL}/notifications/register-token`,
+      //   { expo_push_token: pushToken },
+      //   { headers: { Authorization: `Bearer ${accessToken}` } }
+      // );
+      return;
+    } catch {
+      // Push registration failing shouldn't block login — it's an
+      // enhancement, not a requirement to use the app.
+    }
+  }
 
-    //   const pushToken = (
-    //     await Notifications.getExpoPushTokenAsync({
-    //       projectId: Constants.expoConfig?.extra?.eas?.projectId,
-    //     })
-    //   ).data;
+  async function handleGoogleLogin(accessToken?: string) {
+    if (!accessToken) return;
+    setError("");
+    try {
+      // Ask Google who this token belongs to, then hand that to OUR
+      // backend to verify and issue OUR OWN JWT. We never trust the
+      // Google token itself for API auth — only as proof of identity
+      // during login.
+      const googleUser = await axios.get(
+        "https://www.googleapis.com/userinfo/v2/me",
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      );
 
-    //   await axios.post(
-    //     `${API_URL}/notifications/register-token`,
-    //     { expo_push_token: pushToken },
-    //     { headers: { Authorization: `Bearer ${accessToken}` } }
-    //   );
-    // } catch {
-    //   // Push registration failing shouldn't block login — it's an
-    //   // enhancement, not a requirement to use the app.
-    // }
+      const res = await axios.post(`${API_URL}/auth/google`, {
+        email: googleUser.data.email,
+        fullname: googleUser.data.name,
+      });
+
+      await AsyncStorage.setItem("token", res.data.access_token);
+      await registerPushToken(res.data.access_token);
+      router.push("/home");
+    } catch {
+      setError("Google sign-in failed");
+    }
   }
 
   async function handleSubmit() {
@@ -96,6 +137,10 @@ export default function Login() {
         <Text style={styles.buttonText}>{isRegister ? "Create account" : "Sign in"}</Text>
       </Pressable>
 
+      <Pressable style={styles.googleButton} disabled={!request} onPress={() => promptAsync()}>
+        <Text style={styles.googleButtonText}>Continue with Google</Text>
+      </Pressable>
+
       <Text style={styles.footnote}>Patients only. Clinical staff use the web console.</Text>
     </View>
   );
@@ -111,6 +156,8 @@ const styles = StyleSheet.create({
   input: { borderWidth: 1, borderColor: "#D1D5DB", borderRadius: 6, padding: 12, fontSize: 16 },
   button: { backgroundColor: "#2563EB", borderRadius: 6, padding: 14, alignItems: "center", marginTop: 8 },
   buttonText: { color: "#FFFFFF", fontSize: 16, fontWeight: "600" },
+  googleButton: { borderWidth: 1, borderColor: "#D1D5DB", borderRadius: 6, padding: 14, alignItems: "center", marginTop: 8 },
+  googleButtonText: { fontSize: 16, fontWeight: "600", color: "#111111" },
   error: { color: "#DC2626", fontSize: 14 },
   footnote: { fontSize: 13, color: "#6B7280", textAlign: "center", marginTop: 16 },
 });
