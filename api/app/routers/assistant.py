@@ -84,13 +84,13 @@ async def ask_assistant(
             )
 
         saved_message = AssistantMessage(
-        patient_id=user.id,
-        question=payload.question,
-        answer=answer,
-        sources=", ".join(c["topic"] for c in context),
-        escalated=is_emergency,
-    )
-    db.add(saved_message)
+            patient_id=user.id,
+            question=payload.question,
+            answer=answer,
+            sources=", ".join(c["topic"] for c in context),
+            escalated=is_emergency,
+        )
+        db.add(saved_message)
 
     db.commit()
 
