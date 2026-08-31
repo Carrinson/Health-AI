@@ -31,7 +31,8 @@ class Appointment(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
-
+    consultation_type: Mapped[str] = mapped_column(String(20), default="in_person")  # "in_person" or "video"
+    video_room_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
     # foreign_keys is required here because there are TWO foreign keys to the
     # same users table (patient and doctor) — without it, SQLAlchemy can't
     # tell which column each relationship should follow.

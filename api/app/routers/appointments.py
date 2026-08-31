@@ -10,6 +10,8 @@ from app.models.appointment import Appointment, AppointmentStatus
 from app.models.user import User, UserRole
 from app.schemas.appointment import AppointmentCreate, AppointmentOut, AppointmentStatusUpdate
 
+import secrets
+
 router = APIRouter(prefix="/appointments", tags=["appointments"])
 
 
@@ -25,10 +27,6 @@ def book_appointment(
     if not doctor:
         raise HTTPException(400, "Selected doctor does not exist")
 
-    # Reject double-booking the exact same slot — the real availability
-    # check (is this slot within the doctor's working hours) happens
-    # client-side by only offering real slots from /availability/{id}/slots;
-    # this is the server-side guard against a race or a stale UI.
     existing = db.query(Appointment).filter(
         Appointment.doctor_id == payload.doctor_id,
         Appointment.scheduled_for == payload.scheduled_for,
@@ -37,11 +35,21 @@ def book_appointment(
     if existing:
         raise HTTPException(409, "That slot has just been booked by someone else")
 
-    appt = Appointment(patient_id=user.id, **payload.model_dump())
+    data = payload.model_dump()
+
+    # Unguessable room ID — anyone with this string can join, so it must
+    # not be predictable from the appointment ID alone.
+    if data["consultation_type"] == "video":
+        data["video_room_id"] = f"healthai-{secrets.token_urlsafe(16)}"
+
+    appt = Appointment(patient_id=user.id, **data)
     db.add(appt)
     db.commit()
     db.refresh(appt)
     return appt
+
+
+
 
 @router.get("", response_model=list[AppointmentOut])
 def list_my_appointments(
@@ -86,3 +94,4 @@ def list_doctors(
     what's necessary to pick a clinician."""
     doctors = db.query(User).filter(User.role == UserRole.DOCTOR).all()
     return [{"id": d.id, "fullname": d.fullname} for d in doctors]
+

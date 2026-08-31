@@ -20,6 +20,8 @@ from app.models.assistant_message import AssistantMessage
 router = APIRouter(prefix="/assistant", tags=["assistant"])
 
 
+
+
 class AskRequest(BaseModel):
     question: str
 
