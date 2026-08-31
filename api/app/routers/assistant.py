@@ -15,6 +15,7 @@ from app.models.user import User, UserRole
 from app.services.llm import generate_answer
 from app.services.push import send_push_notification
 from app.services.rag import retrieve
+from app.models.assistant_message import AssistantMessage
 
 router = APIRouter(prefix="/assistant", tags=["assistant"])
 
@@ -82,10 +83,45 @@ async def ask_assistant(
                 body=f"{user.fullname} asked about a possible emergency symptom.",
             )
 
+        saved_message = AssistantMessage(
+        patient_id=user.id,
+        question=payload.question,
+        answer=answer,
+        sources=", ".join(c["topic"] for c in context),
+        escalated=is_emergency,
+    )
+    db.add(saved_message)
+
     db.commit()
 
     return AskResponse(answer=answer, sources=[c["topic"] for c in context], escalated=is_emergency)
 
+
+@router.get("/history")
+def get_assistant_history(
+    user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+):
+    """A patient's own assistant conversation, oldest first — same shape
+    as the patient<->doctor chat history endpoint, for a consistent
+    pattern across both chat-style features."""
+    messages = (
+        db.query(AssistantMessage)
+        .filter(AssistantMessage.patient_id == user.id)
+        .order_by(AssistantMessage.created_at)
+        .all()
+    )
+    return [
+        {
+            "id": m.id,
+            "question": m.question,
+            "answer": m.answer,
+            "sources": m.sources.split(", ") if m.sources else [],
+            "escalated": m.escalated,
+            "created_at": m.created_at.isoformat(),
+        }
+        for m in messages
+    ]
 
 @router.get("/escalations")
 def list_escalations(

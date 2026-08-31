@@ -5,6 +5,7 @@ import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as WebBrowser from "expo-web-browser";
 import * as Google from "expo-auth-session/providers/google";
+import KeyboardScreen from "./components/KeyboardScreen";
 // import * as Notifications from "expo-notifications";
 // import Constants from "expo-constants";
 
@@ -104,6 +105,7 @@ export default function Login() {
   }
 
   return (
+    <KeyboardScreen contentContainerStyle={styles.container}>
     <View style={styles.container}>
       <Text style={styles.title}>HealthAI</Text>
       <Text style={styles.subtitle}>Check your symptoms, keep your records, book care.</Text>
@@ -144,6 +146,7 @@ export default function Login() {
 
       <Text style={styles.footnote}>Patients only. Clinical staff use the web console.</Text>
     </View>
+  </KeyboardScreen>
   );
 }
 
@@ -154,7 +157,7 @@ const styles = StyleSheet.create({
   tabRow: { flexDirection: "row", gap: 24, marginBottom: 16, borderBottomWidth: 1, borderColor: "#E5E7EB" },
   tabActive: { fontSize: 14, fontWeight: "600", paddingBottom: 10, borderBottomWidth: 2, borderColor: "#111111" },
   tabInactive: { fontSize: 14, fontWeight: "500", color: "#6B7280", paddingBottom: 10 },
-  input: { borderWidth: 1, borderColor: "#D1D5DB", borderRadius: 6, padding: 12, fontSize: 16 },
+  input: { borderWidth: 1, borderColor: "#D1D5DB", borderRadius: 6, padding: 12, fontSize: 16, color: "#111111" },
   button: { backgroundColor: "#2563EB", borderRadius: 6, padding: 14, alignItems: "center", marginTop: 8 },
   buttonText: { color: "#FFFFFF", fontSize: 16, fontWeight: "600" },
   googleButton: { borderWidth: 1, borderColor: "#D1D5DB", borderRadius: 6, padding: 14, alignItems: "center", marginTop: 8 },

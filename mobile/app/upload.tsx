@@ -3,6 +3,7 @@ import { View, Text, Pressable, Image, StyleSheet, ActivityIndicator } from "rea
 import * as ImagePicker from "expo-image-picker";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import KeyboardScreen from "./components/KeyboardScreen";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
@@ -67,6 +68,7 @@ export default function Upload() {
   }
 
   return (
+    <KeyboardScreen contentContainerStyle={styles.container}>
     <View style={styles.container}>
       <Text style={styles.title}>Upload a document</Text>
       <Text style={styles.subtitle}>
@@ -99,6 +101,7 @@ export default function Upload() {
         </Pressable>
       )}
     </View>
+    </KeyboardScreen>
   );
 }
 

@@ -1,16 +1,43 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { View, Text, TextInput, Pressable, FlatList, StyleSheet, ActivityIndicator } from "react-native";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import KeyboardScreen, { KeyboardScreenRaw } from "./components/KeyboardScreen";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
 export default function Assistant() {
-  const [messages, setMessages] = useState<any[]>([
-    { role: "assistant", text: "Ask me a general health question. I'm not a substitute for the Symptom Checker or a doctor." },
-  ]);
+  const [messages, setMessages] = useState<any[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loadingHistory, setLoadingHistory] = useState(true);
+
+  useEffect(() => {
+    async function loadHistory() {
+      try {
+        const token = await AsyncStorage.getItem("token");
+        const res = await axios.get(`${API_URL}/assistant/history`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (res.data.length === 0) {
+          setMessages([{ role: "assistant", text: "Ask me a general health question. I'm not a substitute for the Symptom Checker or a doctor." }]);
+        } else {
+          // Flatten each saved Q&A pair into two chat bubbles, in order.
+          const flattened = res.data.flatMap((m: any) => [
+            { role: "user", text: m.question },
+            { role: "assistant", text: m.answer, escalated: m.escalated, sources: m.sources },
+          ]);
+          setMessages(flattened);
+        }
+      } catch {
+        setMessages([{ role: "assistant", text: "Ask me a general health question." }]);
+      } finally {
+        setLoadingHistory(false);
+      }
+    }
+    loadHistory();
+  }, []);
 
   async function send() {
     if (!input.trim()) return;
@@ -43,7 +70,9 @@ export default function Assistant() {
   }
 
   return (
+    <KeyboardScreenRaw>
     <View style={styles.container}>
+      if (loadingHistory) return <ActivityIndicator style={{ marginTop: 40 }} />;
       <FlatList
         data={messages}
         keyExtractor={(_, i) => String(i)}
@@ -79,6 +108,7 @@ export default function Assistant() {
         </Pressable>
       </View>
     </View>
+    </KeyboardScreenRaw>
   );
 }
 

@@ -2,9 +2,6 @@ import { useState } from "react";
 import client from "../api/client";
 
 export default function Assistant() {
-  const [messages, setMessages] = useState([
-    { role: "assistant", text: "Ask a general health question. Answers are grounded in the app's reference corpus." },
-  ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -27,6 +24,26 @@ export default function Assistant() {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+  async function loadHistory() {
+    try {
+      const res = await client.get("/assistant/history");
+      if (res.data.length === 0) {
+        setMessages([{ role: "assistant", text: "Ask a general health question. Answers are grounded in the app's reference corpus." }]);
+      } else {
+        const flattened = res.data.flatMap((m) => [
+          { role: "user", text: m.question },
+          { role: "assistant", text: m.answer, escalated: m.escalated, sources: m.sources },
+        ]);
+        setMessages(flattened);
+      }
+    } catch {
+      setMessages([{ role: "assistant", text: "Ask a general health question." }]);
+    }
+  }
+  loadHistory();
+}, []);
 
   return (
     <div style={{ maxWidth: 720, margin: "0 auto", padding: "40px 32px", display: "flex", flexDirection: "column", height: "calc(100vh - 80px)" }}>

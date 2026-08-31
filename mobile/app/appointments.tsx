@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { View, Text, Pressable, StyleSheet, ScrollView, TextInput, ActivityIndicator } from "react-native";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import KeyboardScreen from "./components/KeyboardScreen";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
@@ -88,6 +89,7 @@ export default function Appointments() {
   if (loading) return <ActivityIndicator style={{ marginTop: 40 }} />;
 
   return (
+    <KeyboardScreen contentContainerStyle={styles.container}>
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Book care</Text>
 
@@ -167,6 +169,7 @@ export default function Appointments() {
       ))}
       {appointments.length === 0 && <Text style={styles.muted}>No appointments yet.</Text>}
     </ScrollView>
+    </KeyboardScreen>
   );
 }
 

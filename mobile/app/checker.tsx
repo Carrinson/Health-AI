@@ -2,6 +2,7 @@ import { useState } from "react";
 import { View, Text, Pressable, ScrollView, TextInput, StyleSheet, ActivityIndicator } from "react-native";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import KeyboardScreen from "./components/KeyboardScreen";
 
 // Same curated subset used on web — keep these two lists in sync manually
 // for now; a shared constants package is a v2 refactor, not worth it today.
@@ -87,6 +88,7 @@ export default function SymptomChecker() {
   }
 
   return (
+    <KeyboardScreen contentContainerStyle={styles.container}>
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>What are you experiencing?</Text>
 
@@ -110,6 +112,7 @@ export default function SymptomChecker() {
         {loading ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.primaryButtonText}>Check my symptoms</Text>}
       </Pressable>
     </ScrollView>
+    </KeyboardScreen>
   );
 }
 

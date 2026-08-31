@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { View, Text, TextInput, Pressable, FlatList, StyleSheet } from "react-native";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import KeyboardScreen, { KeyboardScreenRaw } from "./components/KeyboardScreen";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 const WS_URL = API_URL.replace("https://", "wss://").replace("http://", "ws://");
@@ -71,6 +72,7 @@ export default function Chat() {
   }
 
   return (
+    <KeyboardScreenRaw>
     <View style={styles.container}>
       <Pressable onPress={() => setActiveContact(null)}>
         <Text style={styles.backLink}>← Back</Text>
@@ -107,6 +109,7 @@ export default function Chat() {
         </Pressable>
       </View>
     </View>
+    </KeyboardScreenRaw>
   );
 }
 
