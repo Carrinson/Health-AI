@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import client from "../api/client";
 
 export default function Assistant() {
