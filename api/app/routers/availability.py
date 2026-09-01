@@ -1,4 +1,4 @@
-from datetime import date as date_type, datetime, timedelta
+from datetime import date as date_type, datetime, timedelta, timezone
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -59,7 +59,15 @@ def get_available_slots(
     db: Annotated[Session, Depends(get_db)],
 ):
     """Any authenticated patient calls this to see real bookable slots for
-    a doctor on a specific date."""
+    a doctor on a specific date.
+
+    Doctor availability windows (start_time/end_time) are treated as UTC
+    clock times — a real product would store a timezone per doctor, but
+    for this project, treating everything as UTC consistently is what
+    fixes the display-vs-booking mismatch: the time shown to the user and
+    the time actually sent back on booking must be the SAME value,
+    unambiguously, regardless of the browser's local timezone.
+    """
     weekday = date.weekday()
     windows = (
         db.query(DoctorAvailability)
@@ -81,12 +89,12 @@ def get_available_slots(
         )
         .all()
     )
-    # Normalise to naive datetimes for comparison — scheduled_for is stored
-    # with timezone info (DateTime(timezone=True)), but the slots we build
-    # below via datetime.combine() are naive. Comparing aware vs naive
-    # datetimes either raises or silently never matches, which was the bug:
-    # booked slots never showed as unavailable.
-    booked_times = {b.scheduled_for.replace(tzinfo=None) for b in booked}
+    # Normalise stored (timezone-aware) appointment times to naive UTC for
+    # comparison against the naive slot times we build below.
+    booked_times = {
+        b.scheduled_for.astimezone(timezone.utc).replace(tzinfo=None)
+        for b in booked
+    }
 
     slots = []
     for w in windows:
@@ -94,10 +102,14 @@ def get_available_slots(
         window_end = datetime.combine(date, w.end_time)
         step = timedelta(minutes=w.slot_minutes)
         while current + step <= window_end:
+            # Explicitly tag as UTC on the way OUT to the client. This is
+            # the actual fix: without this, the ISO string has no timezone
+            # marker, and the browser was interpreting/re-sending it
+            # inconsistently, producing the 1-hour shift.
             slots.append(SlotOut(
-                start=current.isoformat(),
-                end=(current + step).isoformat(),
-                available=current.replace(tzinfo=None) not in booked_times,
+                start=current.replace(tzinfo=timezone.utc).isoformat(),
+                end=(current + step).replace(tzinfo=timezone.utc).isoformat(),
+                available=current not in booked_times,
             ))
             current += step
 
