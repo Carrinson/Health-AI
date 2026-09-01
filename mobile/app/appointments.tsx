@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { View, Text, Pressable, StyleSheet, ScrollView, TextInput, ActivityIndicator } from "react-native";
+ import { useEffect, useState } from "react";
+import { View, Text, Pressable, StyleSheet, ScrollView, TextInput, ActivityIndicator, Linking } from "react-native";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import KeyboardScreen from "./components/KeyboardScreen";
@@ -12,6 +12,7 @@ export default function Appointments() {
   const [selectedDoctor, setSelectedDoctor] = useState<number | null>(null);
   const [slots, setSlots] = useState<any[]>([]);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
+  const [consultationType, setConsultationType] = useState<"in_person" | "video">("in_person");
   const [reason, setReason] = useState("");
   const [loading, setLoading] = useState(true);
   const [booking, setBooking] = useState(false);
@@ -41,18 +42,18 @@ export default function Appointments() {
 
   useEffect(() => { loadData(); }, []);
 
- async function loadSlots(doctorId: number) {
-  setSlots([]);
-  setSelectedSlot(null);
-  try {
-    const headers = await authHeader();
-    const today = new Date().toISOString().split("T")[0];
-    const res = await axios.get(`${API_URL}/availability/${doctorId}/slots?date=${today}`, { headers });
-    setSlots(res.data); // show everything, available and booked alike
-  } catch {
+  async function loadSlots(doctorId: number) {
     setSlots([]);
+    setSelectedSlot(null);
+    try {
+      const headers = await authHeader();
+      const today = new Date().toISOString().split("T")[0];
+      const res = await axios.get(`${API_URL}/availability/${doctorId}/slots?date=${today}`, { headers });
+      setSlots(res.data);
+    } catch {
+      setSlots([]);
+    }
   }
-}
 
   function selectDoctor(doctorId: number) {
     setSelectedDoctor(doctorId);
@@ -70,7 +71,12 @@ export default function Appointments() {
       const headers = await authHeader();
       await axios.post(
         `${API_URL}/appointments`,
-        { doctor_id: selectedDoctor, scheduled_for: selectedSlot, reason },
+        {
+          doctor_id: selectedDoctor,
+          scheduled_for: selectedSlot,
+          reason,
+          consultation_type: consultationType,
+        },
         { headers }
       );
       setSuccess(true);
@@ -78,6 +84,7 @@ export default function Appointments() {
       setSelectedDoctor(null);
       setSelectedSlot(null);
       setSlots([]);
+      setConsultationType("in_person");
       loadData();
     } catch {
       setError("Booking failed — that slot may have just been taken");
@@ -90,7 +97,6 @@ export default function Appointments() {
 
   return (
     <KeyboardScreen contentContainerStyle={styles.container}>
-    <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Book care</Text>
 
       <Text style={styles.sectionLabel}>Clinician</Text>
@@ -110,7 +116,9 @@ export default function Appointments() {
       {selectedDoctor && (
         <>
           <Text style={styles.sectionLabel}>Available times today</Text>
-          {slots.length > 0 && (
+          {slots.length === 0 ? (
+            <Text style={styles.muted}>No availability set for this doctor today.</Text>
+          ) : (
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
               {slots.map((s) => (
                 <Pressable
@@ -138,11 +146,28 @@ export default function Appointments() {
               ))}
             </View>
           )}
-          {slots.length === 0 && (
-            <Text style={styles.muted}>No availability set for this doctor today.</Text>
-          )}
         </>
       )}
+
+      <Text style={styles.sectionLabel}>Consultation type</Text>
+      <View style={{ flexDirection: "row", gap: 8 }}>
+        <Pressable
+          onPress={() => setConsultationType("in_person")}
+          style={[styles.typeChip, consultationType === "in_person" && styles.typeChipSelected]}
+        >
+          <Text style={consultationType === "in_person" ? styles.typeTextSelected : styles.typeText}>
+            In person
+          </Text>
+        </Pressable>
+        <Pressable
+          onPress={() => setConsultationType("video")}
+          style={[styles.typeChip, consultationType === "video" && styles.typeChipSelected]}
+        >
+          <Text style={consultationType === "video" ? styles.typeTextSelected : styles.typeText}>
+            Video call
+          </Text>
+        </Pressable>
+      </View>
 
       <Text style={styles.sectionLabel}>Reason for visit</Text>
       <TextInput
@@ -165,10 +190,20 @@ export default function Appointments() {
         <View key={a.id} style={styles.apptCard}>
           <Text style={styles.apptDoctor}>{a.reason}</Text>
           <Text style={styles.muted}>{new Date(a.scheduled_for).toLocaleString()} · {a.status}</Text>
+          {a.consultation_type === "video" && (
+            <Text style={styles.videoLabel}>Video consultation</Text>
+          )}
+          {a.consultation_type === "video" && a.status === "confirmed" && a.video_room_id && (
+            <Pressable
+              style={styles.joinButton}
+              onPress={() => Linking.openURL(`https://meet.jit.si/${a.video_room_id}`)}
+            >
+              <Text style={styles.joinButtonText}>Join video call</Text>
+            </Pressable>
+          )}
         </View>
       ))}
       {appointments.length === 0 && <Text style={styles.muted}>No appointments yet.</Text>}
-    </ScrollView>
     </KeyboardScreen>
   );
 }
@@ -185,14 +220,21 @@ const styles = StyleSheet.create({
   slotChipSelected: { backgroundColor: "#111111", borderColor: "#111111" },
   slotText: { fontSize: 13, fontWeight: "600", color: "#111111" },
   slotTextSelected: { fontSize: 13, fontWeight: "600", color: "#FFFFFF" },
+  slotChipDisabled: { backgroundColor: "#F3F4F6", borderColor: "#E5E7EB" },
+  slotTextDisabled: { fontSize: 13, fontWeight: "600", color: "#9CA3AF" },
+  typeChip: { borderWidth: 1, borderColor: "#D1D5DB", borderRadius: 999, paddingVertical: 8, paddingHorizontal: 16 },
+  typeChipSelected: { backgroundColor: "#111111", borderColor: "#111111" },
+  typeText: { fontSize: 13, fontWeight: "600", color: "#111111" },
+  typeTextSelected: { fontSize: 13, fontWeight: "600", color: "#FFFFFF" },
   muted: { fontSize: 14, color: "#6B7280" },
-  textInput: { borderWidth: 1, borderColor: "#D1D5DB", borderRadius: 6, padding: 12, fontSize: 16, minHeight: 80, textAlignVertical: "top" },
+  textInput: { borderWidth: 1, borderColor: "#D1D5DB", borderRadius: 6, padding: 12, fontSize: 16, minHeight: 80, textAlignVertical: "top", color: "#111111" },
   error: { color: "#DC2626", fontSize: 14 },
   success: { color: "#16A34A", fontSize: 14 },
   primaryButton: { backgroundColor: "#2563EB", borderRadius: 6, padding: 15, alignItems: "center" },
   primaryButtonText: { color: "#FFFFFF", fontSize: 16, fontWeight: "600" },
   apptCard: { borderWidth: 1, borderColor: "#E5E7EB", borderRadius: 8, padding: 16 },
   apptDoctor: { fontSize: 15, fontWeight: "600" },
-  slotChipDisabled: { backgroundColor: "#F3F4F6", borderColor: "#E5E7EB" },
-  slotTextDisabled: { fontSize: 13, fontWeight: "600", color: "#9CA3AF" },
+  videoLabel: { fontSize: 12, color: "#2563EB", fontWeight: "600", marginTop: 4 },
+  joinButton: { backgroundColor: "#16A34A", borderRadius: 6, padding: 10, alignItems: "center", marginTop: 8 },
+  joinButtonText: { color: "#FFFFFF", fontSize: 13, fontWeight: "600" },
 });

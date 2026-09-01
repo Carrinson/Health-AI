@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+ import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import client from "../api/client";
 
 const STATUS_STYLE = {
@@ -10,9 +11,12 @@ const STATUS_STYLE = {
 
 const DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const DAY_OPTIONS = [
-  { value: 0, label: "Monday" }, { value: 1, label: "Tuesday" },
-  { value: 2, label: "Wednesday" }, { value: 3, label: "Thursday" },
-  { value: 4, label: "Friday" }, { value: 5, label: "Saturday" },
+  { value: 0, label: "Monday" },
+  { value: 1, label: "Tuesday" },
+  { value: 2, label: "Wednesday" },
+  { value: 3, label: "Thursday" },
+  { value: 4, label: "Friday" },
+  { value: 5, label: "Saturday" },
   { value: 6, label: "Sunday" },
 ];
 
@@ -39,7 +43,9 @@ export default function AppointmentManagement() {
     }
   }
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+  }, []);
 
   async function updateStatus(id, status) {
     try {
@@ -74,7 +80,9 @@ export default function AppointmentManagement() {
     }
   }
 
-  if (error) return <p style={{ padding: 24, color: "#DC2626" }}>{error}</p>;
+  if (error) {
+    return <p style={{ padding: 24, color: "#DC2626" }}>{error}</p>;
+  }
 
   return (
     <div style={{ maxWidth: 1080, margin: "0 auto", padding: "40px 32px" }}>
@@ -91,7 +99,9 @@ export default function AppointmentManagement() {
             {availability.map((a) => (
               <span key={a.id} style={styles.availabilityChip}>
                 {DAY_NAMES[a.day_of_week]} {a.start_time.slice(0, 5)}–{a.end_time.slice(0, 5)}
-                <button onClick={() => removeAvailability(a.id)} style={styles.removeChip}>×</button>
+                <button onClick={() => removeAvailability(a.id)} style={styles.removeChip}>
+                  ×
+                </button>
               </span>
             ))}
           </div>
@@ -100,23 +110,17 @@ export default function AppointmentManagement() {
         <div style={styles.availForm}>
           <select value={day} onChange={(e) => setDay(Number(e.target.value))} style={styles.select}>
             {DAY_OPTIONS.map((d) => (
-              <option key={d.value} value={d.value}>{d.label}</option>
+              <option key={d.value} value={d.value}>
+                {d.label}
+              </option>
             ))}
           </select>
-          <input
-            type="time"
-            value={startTime}
-            onChange={(e) => setStartTime(e.target.value)}
-            style={styles.timeInput}
-          />
+          <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} style={styles.timeInput} />
           <span style={{ color: "#6B7280" }}>to</span>
-          <input
-            type="time"
-            value={endTime}
-            onChange={(e) => setEndTime(e.target.value)}
-            style={styles.timeInput}
-          />
-          <button onClick={addAvailability} style={styles.addBtn}>Add</button>
+          <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} style={styles.timeInput} />
+          <button onClick={addAvailability} style={styles.addBtn}>
+            Add
+          </button>
         </div>
         {formError && <p style={{ color: "#DC2626", fontSize: 13, margin: "8px 0 0" }}>{formError}</p>}
       </div>
@@ -126,11 +130,14 @@ export default function AppointmentManagement() {
           <span>Patient</span>
           <span>Reason</span>
           <span>Requested for</span>
+          <span>Type</span>
           <span>Status</span>
           <span>Action</span>
         </div>
         {appointments.map((a) => {
-          const style = STATUS_STYLE[a.status] || STATUS_STYLE.requested;
+          const statusStyle = STATUS_STYLE[a.status] || STATUS_STYLE.requested;
+          const isVideo = a.consultation_type === "video";
+
           return (
             <div key={a.id} style={styles.row}>
               <span>Patient #{a.patient_id}</span>
@@ -141,9 +148,16 @@ export default function AppointmentManagement() {
                 {new Date(a.scheduled_for).toLocaleString()}
               </span>
               <span>
-                <span style={{ ...styles.badge, background: style.bg }}>{style.label}</span>
+                {isVideo ? (
+                  <span style={styles.videoBadge}>Video</span>
+                ) : (
+                  <span style={{ color: "#6B7280", fontSize: 13 }}>In person</span>
+                )}
               </span>
-              <span style={{ display: "flex", gap: 6 }}>
+              <span>
+                <span style={{ ...styles.badge, background: statusStyle.bg }}>{statusStyle.label}</span>
+              </span>
+              <span style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 {a.status === "requested" && (
                   <>
                     <button style={styles.confirmBtn} onClick={() => updateStatus(a.id, "confirmed")}>
@@ -155,18 +169,23 @@ export default function AppointmentManagement() {
                   </>
                 )}
                 {a.status === "confirmed" && (
-                  <button style={styles.confirmBtn} onClick={() => updateStatus(a.id, "completed")}>
-                    Mark complete
-                  </button>
+                  <>
+                    {isVideo && a.video_room_id && (
+                      <Link to={`/video/${a.video_room_id}`} style={styles.joinLink}>
+                        Join call
+                      </Link>
+                    )}
+                    <button style={styles.confirmBtn} onClick={() => updateStatus(a.id, "completed")}>
+                      Mark complete
+                    </button>
+                  </>
                 )}
               </span>
             </div>
           );
         })}
         {appointments.length === 0 && (
-          <div style={{ padding: 40, textAlign: "center", color: "#6B7280" }}>
-            No appointment requests yet.
-          </div>
+          <div style={{ padding: 40, textAlign: "center", color: "#6B7280" }}>No appointment requests yet.</div>
         )}
       </div>
     </div>
@@ -186,9 +205,27 @@ const styles = {
   timeInput: { padding: 8, border: "1px solid #D1D5DB", borderRadius: 6, fontSize: 13 },
   addBtn: { border: "none", background: "#2563EB", color: "#FFFFFF", fontSize: 13, fontWeight: 600, padding: "8px 16px", borderRadius: 6, cursor: "pointer" },
   tableBox: { border: "1px solid #E5E7EB", borderRadius: 8, overflow: "hidden" },
-  row: { display: "grid", gridTemplateColumns: "0.8fr 1.6fr 1.2fr 1fr 1.2fr", gap: 12, padding: "13px 16px", borderBottom: "1px solid #F3F4F6", alignItems: "center" },
+  row: {
+    display: "grid",
+    gridTemplateColumns: "0.7fr 1.4fr 1.1fr 0.7fr 0.9fr 1.3fr",
+    gap: 10,
+    padding: "13px 16px",
+    borderBottom: "1px solid #F3F4F6",
+    alignItems: "center",
+  },
   headerRow: { background: "#FAFAFA", fontSize: 12, fontWeight: 500, textTransform: "uppercase", color: "#6B7280" },
   badge: { color: "#FFFFFF", fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", padding: "4px 12px", borderRadius: 999 },
+  videoBadge: { background: "#EFF6FF", color: "#2563EB", fontSize: 11, fontWeight: 700, textTransform: "uppercase", padding: "4px 10px", borderRadius: 999 },
   confirmBtn: { border: "none", background: "#2563EB", color: "#FFFFFF", fontSize: 13, fontWeight: 600, padding: "6px 12px", borderRadius: 6, cursor: "pointer" },
   cancelBtn: { border: "1px solid #DC2626", background: "#FFFFFF", color: "#DC2626", fontSize: 13, fontWeight: 600, padding: "6px 12px", borderRadius: 6, cursor: "pointer" },
+  joinLink: {
+    textDecoration: "none",
+    background: "#16A34A",
+    color: "#FFFFFF",
+    fontSize: 13,
+    fontWeight: 600,
+    padding: "6px 12px",
+    borderRadius: 6,
+    display: "inline-block",
+  },
 };

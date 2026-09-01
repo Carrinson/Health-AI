@@ -15,6 +15,8 @@ import AdminUsers from "./pages/AdminUsers";
 import AdminCreateDoctor from "./pages/AdminCreateDoctor";
 import Escalations from "./pages/Escalation";
 import Assistant from "./pages/Assistant";
+import VideoCall from "./pages/VideoCall";
+
 
 function ProtectedRoute({ children }) {
   const { token } = useAuth();
@@ -50,6 +52,7 @@ export default function App() {
           <Route path="/admin/create-doctor" element={withLayout(AdminCreateDoctor)} />
           <Route path="/escalations" element={withLayout(Escalations)} />
           <Route path="/assistant" element={withLayout(Assistant)} />
+          <Route path="/video/:roomId" element={withLayout(VideoCall)} />
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </BrowserRouter>
